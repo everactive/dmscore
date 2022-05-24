@@ -21,18 +21,18 @@ tasks:
           exit 0
         fi
 
-    down:
-      desc: Run migrations (down)
-      cmds:
-        - |
-          if [ -z $N ]; then
-            echo N must be set, either a number of migrations or "all"
-            exit 1
-          fi
-          if [ $N == "all" ]; then
-            migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations down
-            exit 0
-          else
-            migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations down $N
-            exit 0
-          fi
+  down:
+    desc: Run migrations (down)
+    cmds:
+      - |
+        if [ -z $N ]; then
+          echo N must be set, either a number of migrations or "all"
+          exit 1
+        fi
+        if [ $N == "all" ]; then
+          migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations down
+          exit 0
+        else
+          migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations down $N
+          exit 0
+        fi

@@ -20,18 +20,6 @@
 // Package postgres provides the postgres based DataStore implementation
 package postgres
 
-const createUserTableSQL = `
-CREATE TABLE IF NOT EXISTS userinfo (
-   id             serial primary key,
-   created        timestamp default current_timestamp,
-   modified       timestamp default current_timestamp,
-   username       varchar(200) unique not null,
-   name           varchar(200) not null,
-   email          varchar(200) not null,
-   user_role      int not null
-)
-`
-
 const createUserSQL = "insert into userinfo (username, name, email, user_role) values ($1,$2,$3,$4) returning id"
 const listUsersSQL = "select id, username, name, email, user_role from userinfo order by username"
 const getUserSQL = "select id, username, name, email, user_role from userinfo where username=$1"

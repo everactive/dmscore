@@ -1,5 +1,3 @@
--- 20220519191940_convert_organization_to_gorm.up.sql
-
 ALTER TABLE organization
     ADD created_at TIMESTAMP WITH TIME ZONE;
 

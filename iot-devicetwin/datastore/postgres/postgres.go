@@ -23,7 +23,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"github.com/everactive/dmscore/config/keys"
+	"github.com/everactive/dmscore/pkg/migrate"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"gorm.io/gorm/logger"
 	"os"
 	"time"
@@ -114,8 +118,6 @@ func openDatabase(driver, dataSource string) *DataStore {
 		log.Fatalf("Error opening the database: %v\n", err)
 	}
 
-	// db.Logger.LogMode(logger.Info)
-
 	// Check that we have a valid database connection
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -124,6 +126,13 @@ func openDatabase(driver, dataSource string) *DataStore {
 	err = sqlDB.Ping()
 	if err != nil {
 		log.Fatalf("Error accessing the database: %v\n", err)
+	}
+
+	databaseName := viper.GetString(keys.GetDeviceTwinKey(keys.DatabaseName))
+	migrationsPath := viper.GetString(keys.GetDeviceTwinKey(keys.MigrationsSourceURL))
+	err = migrate.Run(dataSource, driver, fmt.Sprintf("file://%s", migrationsPath), databaseName)
+	if err != nil {
+		log.Fatalf("Error during migrations, need to manually intervene: %s", err.Error())
 	}
 
 	return &DataStore{

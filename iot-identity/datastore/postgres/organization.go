@@ -26,12 +26,6 @@ import (
 	"github.com/everactive/dmscore/iot-identity/models"
 )
 
-// createOrganizationTable creates the database table for organizations with its indexes
-func (s *Store) createOrganizationTable() error {
-	_, err := s.Exec(createOrganizationTableSQL)
-	return err
-}
-
 // OrganizationNew creates a new organization
 func (s *Store) OrganizationNew(org datastore.OrganizationNewRequest) (string, error) {
 	// var id int64

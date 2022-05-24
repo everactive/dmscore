@@ -21,9 +21,12 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
+	"github.com/everactive/dmscore/config/keys"
+	"github.com/everactive/dmscore/pkg/migrate"
+	"github.com/spf13/viper"
 	"log"
 
-	"github.com/everactive/dmscore/iot-management/datastore/models"
 	_ "github.com/lib/pq" // postgresql driver
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -47,9 +50,6 @@ func OpenStore(driver, dataSource string) *Store {
 	// Open the database
 	pgStore = openDatabase(driver, dataSource)
 
-	// Create the tables, if needed
-	pgStore.createTables()
-
 	return pgStore
 }
 
@@ -71,21 +71,16 @@ func openDatabase(driver, dataSource string) *Store {
 		log.Fatalf("Error accessing the database: %v\n", err)
 	}
 
+	databaseName := viper.GetString(keys.DatabaseName)
+	migrationsPath := viper.GetString(keys.MigrationsSourceURL)
+	err = migrate.Run(dataSource, driver, fmt.Sprintf("file://%s", migrationsPath), databaseName)
+	if err != nil {
+		log.Fatalf("Error during migrations, need to manually intervene: %s", err.Error())
+	}
+
 	return &Store{
 		driver: driver,
 		DB:     sqlDB,
 		gormDB: db,
-	}
-}
-
-func (s *Store) createTables() {
-	_ = s.createUserTable()
-	_ = s.createNonceTable()
-	_ = s.createOrganizationTable()
-	_ = s.createOrganizationUserTable()
-
-	err := s.gormDB.AutoMigrate(&models.Setting{})
-	if err != nil {
-		log.Fatalf("Error migrating database: %v\n", err)
 	}
 }

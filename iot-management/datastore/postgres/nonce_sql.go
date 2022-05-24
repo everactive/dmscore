@@ -19,14 +19,5 @@
 
 package postgres
 
-const createNonceTableSQL = `
- CREATE TABLE IF NOT EXISTS openidnonce (
-	 id             serial primary key,
-	 nonce          varchar(255) not null,
-	 endpoint       varchar(255) not null,
-	 timestamp      int not null
- )
-`
-
 const createOpenidNonceSQL = "INSERT INTO openidnonce (nonce, endpoint, timestamp) VALUES ($1, $2, $3)"
 const deleteExpiredOpenidNonceSQL = "DELETE FROM openidnonce where timestamp<$1"

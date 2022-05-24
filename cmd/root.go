@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
@@ -26,10 +24,9 @@ import (
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/everactive/dmscore/iot-management/twinapi"
 	"github.com/everactive/dmscore/iot-management/web"
+	migrate2 "github.com/everactive/dmscore/pkg/migrate"
 	"github.com/everactive/ginkeycloak"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,6 +34,11 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	// this is needed for migrate
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	// this is needed for migrate
+	_ "github.com/lib/pq"
 )
 
 func init() {
@@ -202,35 +204,6 @@ func createDeviceTwinService(coreDB datastore.DataStore) *devicetwinweb.Service 
 	return w
 }
 
-func runMigrations(datasource, sourceURL string) error {
-	db, err := sql.Open("postgres", datasource)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		sourceURL,
-		"postgres",
-		driver)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal(err)
-		return err
-	}
-
-	return nil
-}
-
 func CreateIdentityDataStore() (identitydatastore.DataStore, error) {
 	// Open the connection to the local database
 	databaseDriver := viper.GetString(keys.GetIdentityKey(keys.DatabaseDriver))
@@ -242,6 +215,13 @@ func CreateIdentityDataStore() (identitydatastore.DataStore, error) {
 	if err != nil || db == nil {
 		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataStoreSource)
 		// This satisfies an IDE's nil logic check
+		return nil, err
+	}
+
+	sourceURL := viper.GetString(keys.GetIdentityKey(keys.MigrationsSourceURL))
+	databaseName := viper.GetString(keys.GetIdentityKey(keys.DatabaseName))
+	err = migrate2.Run(dataStoreSource, databaseDriver, fmt.Sprintf("file://%s", sourceURL), databaseName)
+	if err != nil {
 		return nil, err
 	}
 

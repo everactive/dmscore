@@ -7,5 +7,11 @@ ALTER TABLE action
 ALTER TABLE action
     ADD updated_at TIMESTAMP WITH TIME ZONE;
 
-UPDATE action SET updated_at = current_timestamp;
-UPDATE action SET created_at = current_timestamp;
+UPDATE action SET updated_at = modified;
+UPDATE action SET created_at = created;
+
+ALTER TABLE action
+    DROP COLUMN created;
+
+ALTER TABLE action
+    DROP COLUMN modified;

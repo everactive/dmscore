@@ -19,18 +19,6 @@
 
 package postgres
 
-const createOrganizationTableSQL string = `
-	CREATE TABLE IF NOT EXISTS organization (
-		id               serial primary key not null,
-		org_id           varchar(200) not null unique,
-		name             varchar(200) not null,
-		country_name     varchar(200) default '',
-		root_cert         text not null,
-		root_key          text not null,
-        UNIQUE (org_id)
-	)
-`
-
 const listOrganizationSQL = `
 select id, org_id, name, root_cert
 from organization`

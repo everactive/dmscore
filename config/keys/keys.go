@@ -44,6 +44,10 @@ const (
 	ServicePortEnroll = "service.port.enroll"
 	// StaticClientToken is the static client token used to authenticate with the other services
 	StaticClientToken = "static.client.token"
+	// MigrationsSourceURL is the source URL of the migrations for each service sub-component
+	MigrationsSourceURL = "service.migrations.source"
+	// DatabaseName the name of the database for each service sub-component
+	DatabaseName = "database.name"
 )
 
 func GetIdentityKey(key string) string {

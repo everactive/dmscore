@@ -27,28 +27,6 @@ import (
 	"github.com/everactive/dmscore/iot-identity/models"
 )
 
-// createDeviceTable creates the database table for devices with its indexes
-func (s *Store) createDeviceTable() error {
-	_, err := s.Exec(createDeviceTableSQL)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.Exec(createDeviceIDIndexSQL)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.Exec(createDeviceBMSIndexSQL)
-	if err != nil {
-		return err
-	}
-
-	// The alter table calls may fail if the field already exists
-	_, _ = s.Exec(alterDeviceAddDeviceData)
-	return nil
-}
-
 // DeviceNew creates a new device registration
 func (s *Store) DeviceNew(d datastore.DeviceNewRequest) (string, error) {
 	var id int64

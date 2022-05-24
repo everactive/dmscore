@@ -38,12 +38,6 @@ type NonceStore struct {
 	DB *Store
 }
 
-// createNonceTable creates the database table for the openid nonce
-func (s *Store) createNonceTable() error {
-	_, err := s.Exec(createNonceTableSQL)
-	return err
-}
-
 // OpenIDNonceStore returns an openid nonce store
 func (s *Store) OpenIDNonceStore() openid.NonceStore {
 	return &NonceStore{DB: s}

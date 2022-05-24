@@ -28,18 +28,6 @@ import (
 	"github.com/everactive/dmscore/iot-management/datastore"
 )
 
-// createOrganizationTable creates the database table for devices with its indexes.
-func (s *Store) createOrganizationTable() error {
-	_, err := s.Exec(createOrganizationTableSQL)
-	return err
-}
-
-// createOrganizationUserTable creates the database table for devices with its indexes.
-func (s *Store) createOrganizationUserTable() error {
-	_, err := s.Exec(createOrganizationUserTableSQL)
-	return err
-}
-
 // OrganizationGet returns an organization
 func (s *Store) OrganizationGet(orgIDOrName string) (datastore.Organization, error) {
 	org := models.Organization{}

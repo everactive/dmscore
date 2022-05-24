@@ -19,22 +19,6 @@
 
 package postgres
 
-const createOrganizationTableSQL = `
-CREATE TABLE IF NOT EXISTS organization (
-	id            serial primary key,
-	code          varchar(200) not null unique,
-	name          varchar(200) not null,
-	active        bool default true
-)
-`
-const createOrganizationUserTableSQL = `
-CREATE TABLE IF NOT EXISTS organization_user (
-	id            serial primary key,
-	org_id        varchar(200) not null,
-	username      varchar(200) not null,
-	UNIQUE(org_id,username)
-)
-`
 const organizationUserAccessSQL = `
 SELECT EXISTS(
 	select id from organization_user

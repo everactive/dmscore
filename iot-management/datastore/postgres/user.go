@@ -27,12 +27,6 @@ import (
 	"github.com/everactive/dmscore/iot-management/datastore"
 )
 
-// createUserTable creates the database table for devices with its indexes.
-func (s *Store) createUserTable() error {
-	_, err := s.Exec(createUserTableSQL)
-	return err
-}
-
 // CreateUser creates a new user
 func (s *Store) CreateUser(user datastore.User) (int64, error) {
 	var createdUserID int64
