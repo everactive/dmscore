@@ -21,18 +21,18 @@ package web
 
 import (
 	"encoding/json"
+	"github.com/everactive/dmscore/api"
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	"net/http"
 
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/gin-gonic/gin"
 
-	dtwin "github.com/everactive/dmscore/iot-devicetwin/web"
 	log "github.com/sirupsen/logrus"
 )
 
 func formatStandardResponse(errorCode, message string, c *gin.Context) {
-	response := dtwin.StandardResponse{Code: errorCode, Message: message}
+	response := api.StandardResponse{Code: errorCode, Message: message}
 	if len(errorCode) > 0 {
 		c.JSON(http.StatusBadRequest, response)
 		return

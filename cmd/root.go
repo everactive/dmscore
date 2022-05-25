@@ -200,7 +200,6 @@ func createDeviceTwinService(coreDB datastore.DataStore) *devicetwinweb.Service 
 
 	// Start the web API service
 	w := devicetwinweb.NewService(servicePort, ctrl)
-	// log.Fatal(w.Run())
 	return w
 }
 
@@ -227,6 +226,7 @@ func CreateIdentityDataStore() (identitydatastore.DataStore, error) {
 
 	return db, nil
 }
+
 func createIdentityService() *identityweb.IdentityService {
 	db, err := CreateIdentityDataStore()
 	if err != nil || db == nil {
@@ -268,17 +268,7 @@ func createIdentityService() *identityweb.IdentityService {
 
 	internalRouter.Use(identityauth.Factory(viper.GetString(configkey.AuthProvider)))
 
-	wb.SetRouters(internalRouter, enrollRouter)
-
-	// Use a goroutine for the internal serve, we'll block with the enroll serve
-	//go func() {
-	//	log.Info("Listening and serving internal on :" + internalPort)
-	//
-	//	err := internalRouter.Run(":" + internalPort)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}()
+	wb.SetRouter(enrollRouter)
 
 	go func() {
 		log.Info("Listening and serving enroll on :" + enrollPort)

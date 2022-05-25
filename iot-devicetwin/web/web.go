@@ -21,20 +21,7 @@
 package web
 
 import (
-	"os"
-	"strings"
-
-	"github.com/everactive/dmscore/iot-devicetwin/config/keys"
-
-	"github.com/spf13/viper"
-
-	"github.com/gin-gonic/gin"
-
 	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
-	log "github.com/sirupsen/logrus"
-
-	"github.com/everactive/dmscore/iot-identity/auth"
-	middlewarelogger "github.com/everactive/dmscore/iot-identity/middleware/logger"
 )
 
 // Service is the implementation of the web API
@@ -49,35 +36,4 @@ func NewService(port string, ctrl controller.Controller) *Service {
 		port:       port,
 		Controller: ctrl,
 	}
-}
-
-// Run starts the web service
-func (wb Service) Run() error {
-	log.Info("Starting service on port : ", wb.port)
-
-	engine := gin.New()
-
-	logFormat := os.Getenv("LOG_FORMAT")
-	if strings.ToUpper(logFormat) == "JSON" {
-		log.Infof("Setting up JSON log format for logger middleware")
-
-		middlewareLogger := middlewarelogger.New(log.StandardLogger(), middlewarelogger.LogOptions{EnableStarting: true})
-
-		engine.Use(middlewareLogger.HandleFunc)
-	} else {
-		engine.Use(gin.Logger())
-	}
-
-	engine.Use(auth.Factory(viper.GetString(keys.AuthProvider)))
-
-	wb.AddRoutes(engine)
-
-	err := engine.Run(":" + wb.port)
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return nil
 }
