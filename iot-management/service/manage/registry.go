@@ -37,7 +37,19 @@ func (srv *Management) RegDeviceList(orgID, username string, role int) web.Devic
 		}
 	}
 
-	return srv.IdentityAPI.RegDeviceList(orgID)
+	list, err := srv.IdentityService.Identity.DeviceList(orgID)
+	if err != nil {
+		return web.DevicesResponse{
+			StandardResponse: web.StandardResponse{
+				Code:    "RegDevice",
+				Message: err.Error(),
+			},
+		}
+	}
+
+	return web.DevicesResponse{
+		Devices: list,
+	}
 }
 
 // RegisterDevice registers a new device
@@ -63,7 +75,6 @@ func (srv *Management) RegisterDevice(orgID, username string, role int, body []b
 		}
 	}
 
-	// return srv.IdentityAPI.RegisterDevice(body)
 	device, err := srv.IdentityService.Identity.RegisterDevice(&request)
 	if err != nil {
 		return web.RegisterResponse{

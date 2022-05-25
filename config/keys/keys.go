@@ -48,6 +48,12 @@ const (
 	MigrationsSourceURL = "service.migrations.source"
 	// DatabaseName the name of the database for each service sub-component
 	DatabaseName = "database.name"
+	// ServiceScheme is the service scheme to use
+	ServiceScheme = "service.scheme"
+	// ServiceHost is the service host name
+	ServiceHost = "service.host"
+	// JwtSecret is the JWT secret value
+	JwtSecret = "service.jwtsecret" //nolint
 )
 
 func GetIdentityKey(key string) string {

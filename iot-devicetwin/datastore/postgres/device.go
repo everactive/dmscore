@@ -72,8 +72,15 @@ func (db *DataStore) DevicePing(deviceID string, refresh time.Time) error {
 func (db *DataStore) DeviceDelete(deviceID string) error {
 
 	device := datastore.Device{}
-	db.gormDB.Where(&datastore.Device{DeviceID: deviceID}).Find(&device)
-	db.gormDB.Delete(&datastore.Device{Model: gorm.Model{ID: device.ID}})
+	res := db.gormDB.Where(&datastore.Device{DeviceID: deviceID}).Find(&device)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	res = db.gormDB.Delete(&datastore.Device{Model: gorm.Model{ID: device.ID}})
+	if res.Error != nil {
+		return res.Error
+	}
 
 	return nil
 }
@@ -81,7 +88,10 @@ func (db *DataStore) DeviceDelete(deviceID string) error {
 // DeviceList fetches the devices for an organization from the database
 func (db *DataStore) DeviceList(orgID string) ([]datastore.Device, error) {
 	devices := []datastore.Device{}
-	db.gormDB.Where(&datastore.Device{OrganisationID: orgID}).Find(&devices)
+	res := db.gormDB.Where(&datastore.Device{OrganisationID: orgID}).Find(&devices)
+	if res.Error != nil {
+		return devices, res.Error
+	}
 
 	log.Tracef("Devices: %+v", devices)
 

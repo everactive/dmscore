@@ -20,7 +20,6 @@
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/domain"
@@ -119,28 +118,33 @@ func (s *Store) DeviceEnroll(d datastore.DeviceEnrollRequest) (*domain.Enrollmen
 
 // DeviceList fetches the device registrations for an organization
 func (s *Store) DeviceList(orgID string) ([]domain.Enrollment, error) {
-	rows, err := s.Query(listDeviceSQL, orgID)
-	if err != nil {
-		datastore.Logger.Errorf("Error retrieving devices: %v\n", err)
-		return nil, err
-	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			datastore.Logger.Error(err)
-		}
-	}(rows)
-
 	devices := []domain.Enrollment{}
-	for rows.Next() {
-		d := domain.Enrollment{}
-		err := rows.Scan(&d.ID, &d.Organization.ID, &d.Device.Brand, &d.Device.Model, &d.Device.SerialNumber,
-			&d.Credentials.Certificate, &d.Credentials.MQTTURL, &d.Credentials.MQTTPort,
-			&d.Device.StoreID, &d.Device.DeviceKey, &d.Status, &d.DeviceData)
-		if err != nil {
-			return nil, err
+
+	dbDevices := []models.RegisteredDevice{}
+	res := s.gormDB.Model(&models.RegisteredDevice{}).Where("org_id = ?", orgID).Find(&dbDevices)
+	if res.Error != nil {
+		return devices, res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		// May be using org name instead of id
+		org := models.Organization{}
+		res = s.gormDB.Model(&models.Organization{}).Where("name = ?", orgID).Find(&org)
+		if res.RowsAffected == 0 {
+			// If we didn't find the devices by org id and the org doesn't exist by name, then it's an error
+			return devices, res.Error
 		}
-		devices = append(devices, d)
+
+		res := s.gormDB.Model(&models.RegisteredDevice{}).Where("org_id = ?", org.OrgId).Find(&dbDevices)
+		if res.Error != nil {
+			return devices, res.Error
+		}
+	}
+
+	for _, d := range dbDevices {
+		device := domain.Enrollment{}
+		domain.Enrollment{}.FromRegisteredDeviceModel(&d, &device)
+		devices = append(devices, device)
 	}
 
 	return devices, nil
