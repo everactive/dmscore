@@ -20,4 +20,6 @@ locals {
   component_postgres_configmap_name = var.core_component_postgres_configmap_name
   identity_component_postgres_configmap_name = var.identity_component_postgres_configmap_name
   devicetwin_component_postgres_configmap_name = var.devicetwin_component_postgres_configmap_name
+  mqtt_host_address = var.mqtt_host_address
+  mqtt_host_port = var.mqtt_host_port
 }

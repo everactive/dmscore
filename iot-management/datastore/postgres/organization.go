@@ -65,7 +65,7 @@ func (s *Store) OrganizationsForUser(username string) ([]datastore.Organization,
 	// Check if the user is a superuser
 	user, err := s.GetUser(username)
 	if err != nil {
-		return nil, fmt.Errorf("error finding user: %v", err)
+		return nil, fmt.Errorf("error finding user %s: %v", username, err)
 	}
 
 	// No restrictions for the superuser
@@ -75,6 +75,7 @@ func (s *Store) OrganizationsForUser(username string) ([]datastore.Organization,
 		sqlStatement = listUserOrganizationsSQL
 	}
 
+	log.Tracef("SQL: %s", sqlStatement)
 	rows, err := s.Query(sqlStatement, username)
 
 	if err != nil {
@@ -116,6 +117,8 @@ func (s *Store) OrganizationForUserToggle(orgID, username string) error {
 
 func rowsToOrganizations(rows *sql.Rows) ([]datastore.Organization, error) {
 	orgs := []datastore.Organization{}
+
+	log.Tracef("ROWS: %+v", rows)
 
 	for rows.Next() {
 		org := datastore.Organization{}

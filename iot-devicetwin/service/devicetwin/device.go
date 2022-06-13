@@ -22,53 +22,38 @@ package devicetwin
 import (
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
-
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore"
 )
 
 // DeviceGet fetches a device details from the database cache
 func (srv *Service) DeviceGet(orgID, deviceID string) (messages.Device, error) {
-	d, deleted, err := srv.deviceGetByID(deviceID, srv.unscoped)
+	d, isDeleted, err := srv.DeviceGetByID(deviceID)
 	if err != nil {
 		return messages.Device{}, err
 	}
 
-	if deleted && !srv.unscoped {
-		return messages.Device{}, errors.New("device not found")
+	if isDeleted {
+		return messages.Device{}, errors.New("device found but is deleted")
 	}
 
-	// If the OrgIds don't match it's possible we are using the org name, so check that
+	// Validate the supplied orgid
 	if d.OrgId != orgID {
-		// Only do this lookup if we need to
-		organization, err := srv.CoreDB.OrganizationGet(orgID)
-		if err != nil {
-			return messages.Device{}, err
-		}
-		if d.OrgId != organization.OrganizationID {
-			return messages.Device{}, fmt.Errorf("the organization ID does not match the device")
-		}
+		return messages.Device{}, fmt.Errorf("the organization ID does not match the device")
 	}
 
 	return *d, nil
 }
 
-func (srv *Service) deviceGetByID(deviceID string, unscoped bool) (*messages.Device, bool, error) {
+// DeviceGetByID gets a device by its id
+func (srv *Service) DeviceGetByID(deviceID string) (*messages.Device, bool, error) {
 	// Get the device
-	var d datastore.Device
-	var err error
-	if unscoped {
-		d, err = srv.DB.Unscoped().DeviceGet(deviceID)
-		if err != nil {
-			return nil, false, err
-		}
-	} else {
-		d, err = srv.DB.DeviceGet(deviceID)
-		if err != nil {
-			return nil, false, err
-		}
+	d, err := srv.DB.Unscoped().DeviceGet(deviceID)
+	if err != nil {
+		log.Error(err)
+		return nil, false, err
 	}
 
 	device := dataToDomainDevice(d)
@@ -83,12 +68,7 @@ func (srv *Service) deviceGetByID(deviceID string, unscoped bool) (*messages.Dev
 		KernelVersion: d.DeviceVersion.KernelVersion,
 	}
 
-	return &device, d.DeletedAt != gorm.DeletedAt{}, nil
-}
-
-// DeviceGetByID gets a device by its id
-func (srv *Service) DeviceGetByID(deviceID string) (*messages.Device, bool, error) {
-	return srv.deviceGetByID(deviceID, srv.unscoped)
+	return &device, d.IsDeleted(), nil
 }
 
 // DeviceDelete deletes the device from the database

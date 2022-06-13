@@ -51,9 +51,10 @@ const (
 
 // NewStore creates a new memory store
 func NewStore() *Store {
-	d1 := datastore.Device{Model: gorm.Model{ID: testID1}, OrganisationID: "abc", DeviceID: "a111", Brand: "example", DeviceModel: "drone-1000", SerialNumber: "DR1000A111", DeviceKey: "AAAAAAAAA", StoreID: "example-store", Active: true}
-	d2 := datastore.Device{Model: gorm.Model{ID: testID2}, OrganisationID: "abc", DeviceID: "b222", Brand: "example", DeviceModel: "drone-1000", SerialNumber: "DR1000B222", DeviceKey: "BBBBBBBBB", StoreID: "example-store", Active: true}
-	d3 := datastore.Device{Model: gorm.Model{ID: testID3}, OrganisationID: "abc", DeviceID: "c333", Brand: "canonical", DeviceModel: "ubuntu-core-18-amd64", SerialNumber: "d75f7300-abbf-4c11-bf0a-8b7103038490", DeviceKey: "CCCCCCCCC", Active: true}
+	lastRefresh := time.Now()
+	d1 := datastore.Device{Model: gorm.Model{ID: testID1}, LastRefresh: lastRefresh, OrganisationID: "abc", DeviceID: "a111", Brand: "example", DeviceModel: "drone-1000", SerialNumber: "DR1000A111", DeviceKey: "AAAAAAAAA", StoreID: "example-store", Active: true}
+	d2 := datastore.Device{Model: gorm.Model{ID: testID2}, LastRefresh: lastRefresh, OrganisationID: "abc", DeviceID: "b222", Brand: "example", DeviceModel: "drone-1000", SerialNumber: "DR1000B222", DeviceKey: "BBBBBBBBB", StoreID: "example-store", Active: true}
+	d3 := datastore.Device{Model: gorm.Model{ID: testID3}, LastRefresh: lastRefresh, OrganisationID: "abc", DeviceID: "c333", Brand: "canonical", DeviceModel: "ubuntu-core-18-amd64", SerialNumber: "d75f7300-abbf-4c11-bf0a-8b7103038490", DeviceKey: "CCCCCCCCC", Active: true}
 
 	return &Store{
 		Devices: []datastore.Device{d1, d2, d3},
@@ -156,7 +157,7 @@ func (mem *Store) DeviceCreate(device datastore.Device) (int64, error) {
 	mem.lock.Lock()
 	defer mem.lock.Unlock()
 
-	device.LastRefresh = time.Now()
+	device.UpdatedAt = time.Now()
 
 	device.ID = uint(int64(len(mem.Devices) + 1))
 	mem.Devices = append(mem.Devices, device)

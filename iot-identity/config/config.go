@@ -56,7 +56,7 @@ var defaultValues = map[string]interface{}{
 	configkey.ServicePortEnroll:        "8031",
 	configkey.MQTTHostAddress:          "localhost",
 	configkey.MQTTHostPort:             "8883",
-	configkey.MQTTCertificatePath:      "/srv/certs",
+	configkey.MQTTCertificatePath:      "/srv/identity-certs",
 }
 
 const (

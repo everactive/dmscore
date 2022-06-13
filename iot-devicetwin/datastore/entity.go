@@ -44,7 +44,6 @@ type Action struct {
 // Device the repository definition of a device
 type Device struct {
 	gorm.Model
-	LastRefresh    time.Time     `gorm:"column:lastrefresh"`
 	OrganisationID string        `gorm:"column:org_id"`
 	DeviceID       string        `gorm:"column:device_id"`
 	Brand          string        `gorm:"column:brand"`
@@ -55,6 +54,12 @@ type Device struct {
 	Active         bool          `gorm:"column:active"`
 	DeviceVersion  DeviceVersion `gorm:"constraint:OnDelete:CASCADE"`
 	DeviceSnaps    []*DeviceSnap `gorm:"constraint:OnDelete:CASCADE"`
+	LastRefresh    time.Time     `gorm:"column:lastrefresh"`
+}
+
+// IsDeleted returns true if the device is soft-deleted in the database
+func (d *Device) IsDeleted() bool {
+	return d.DeletedAt.Valid
 }
 
 // TableName is the Postgres table name to use

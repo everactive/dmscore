@@ -25,7 +25,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/everactive/dmscore/iot-devicetwin/config/keys"
+	"github.com/everactive/dmscore/config/keys"
+	legacykeys "github.com/everactive/dmscore/iot-devicetwin/config/keys"
 
 	"github.com/everactive/dmscore/iot-identity/service/cert"
 
@@ -45,19 +46,18 @@ type MQTTConnect struct {
 }
 
 var defaultValues = map[string]interface{}{
-	keys.CertificatesPath:              "/srv/certs",
-	keys.ConfigPath:                    "/srv/config",
-	keys.DatabaseDriver:                "postgres",
-	keys.DatastoreSource:               "dbname=management host=localhost user=manager password=abc1234 sslmode=disable",
-	keys.MQTTClientCertificateFilename: "server.crt",
-	keys.MQTTClientKeyFilename:         "server.key",
-	keys.MQTTRootCAFilename:            "ca.crt",
-	keys.MQTTClientIDPrefix:            "devicetwin",
-	keys.MQTTHealthTopic:               "devices/health/+",
-	keys.MQTTPort:                      "8883",
-	keys.MQTTPubTopic:                  "devices/pub/+",
-	keys.MQTTURL:                       "localhost",
-	keys.ServicePort:                   "8040",
+	legacykeys.ConfigPath:                    "/srv/config",
+	legacykeys.DatabaseDriver:                "postgres",
+	legacykeys.DatastoreSource:               "dbname=management host=localhost user=manager password=abc1234 sslmode=disable",
+	legacykeys.MQTTClientCertificateFilename: "server.crt",
+	legacykeys.MQTTClientKeyFilename:         "server.key",
+	legacykeys.MQTTRootCAFilename:            "ca.crt",
+	legacykeys.MQTTClientIDPrefix:            "devicetwin",
+	legacykeys.MQTTHealthTopic:               "devices/health/+",
+	legacykeys.MQTTPort:                      "8883",
+	legacykeys.MQTTPubTopic:                  "devices/pub/+",
+	legacykeys.MQTTURL:                       "localhost",
+	legacykeys.ServicePort:                   "8040",
 }
 
 const (
@@ -68,7 +68,7 @@ const (
 func LoadDeviceTwinConfig(configFilePath string) *MQTTConnect {
 	LoadConfig(configFilePath)
 
-	databaseDriver := viper.GetString(keys.DatabaseDriver)
+	databaseDriver := viper.GetString(legacykeys.DatabaseDriver)
 	found := false
 	for i := range drivers {
 		if drivers[i] == databaseDriver {
@@ -80,7 +80,7 @@ func LoadDeviceTwinConfig(configFilePath string) *MQTTConnect {
 		log.Fatalf("The database driver must be one of: %s", strings.Join(drivers, ", "))
 	}
 
-	certsDir := viper.GetString(keys.CertificatesPath)
+	certsDir := viper.GetString(keys.MQTTCertificatesPath)
 
 	// Get the certificates for the MQTT broker
 	m, err := readCerts(certsDir)
@@ -122,9 +122,9 @@ func LoadConfig(configFilePath string) {
 
 // readCerts reads the certificates from the file system
 func readCerts(certsDir string) (MQTTConnect, error) {
-	rootCAFilename := viper.GetString(keys.MQTTRootCAFilename)
-	clientCertFilename := viper.GetString(keys.MQTTClientCertificateFilename)
-	clientKeyFilename := viper.GetString(keys.MQTTClientKeyFilename)
+	rootCAFilename := viper.GetString(legacykeys.MQTTRootCAFilename)
+	clientCertFilename := viper.GetString(legacykeys.MQTTClientCertificateFilename)
+	clientKeyFilename := viper.GetString(legacykeys.MQTTClientKeyFilename)
 
 	c := MQTTConnect{}
 
@@ -152,7 +152,7 @@ func readCerts(certsDir string) (MQTTConnect, error) {
 }
 
 func generateClientID() string {
-	prefix := viper.GetString(keys.MQTTClientIDPrefix)
+	prefix := viper.GetString(legacykeys.MQTTClientIDPrefix)
 
 	// Generate a random string
 	s, err := cert.CreateSecret(6)

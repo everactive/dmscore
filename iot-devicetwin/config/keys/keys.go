@@ -4,8 +4,7 @@ package keys
 const (
 	// AuthProvider is the string name of the provider for the factory to use (keycloak)
 	AuthProvider = "service.auth.provider"
-	// CertificatesPath is the file path to the certificates used for MQTT communication
-	CertificatesPath = "service.certificates.path"
+
 	// ConfigPath is the path used to load (if provided) and store configuration for the service
 	ConfigPath = "service.config.path"
 	// DatabaseDriver is the well known name for a given database type (memory or postgres)

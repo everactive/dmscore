@@ -21,8 +21,8 @@ package service
 
 import (
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 
-	"github.com/everactive/dmscore/iot-identity/config/configkey"
 	"github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/everactive/dmscore/iot-identity/service/cert"
@@ -41,7 +41,7 @@ func (id IdentityService) RegisterOrganization(req *RegisterOrganizationRequest)
 		return "", fmt.Errorf("the organization '%s' has already been registered", req.Name)
 	}
 
-	rootCertsDir := viper.GetString(configkey.MQTTCertificatePath)
+	rootCertsDir := viper.GetString(keys.GetIdentityKey(keys.CertificatesPath))
 
 	// Create server certificate for the organization
 	serverPEM, serverCA, err := cert.CreateOrganizationCert(rootCertsDir, req.Name)

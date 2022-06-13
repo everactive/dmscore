@@ -73,6 +73,18 @@ resource "kubernetes_deployment" "dmscore" {
             }
           }
         }
+        volume {
+          name = "identity-certs"
+          secret {
+            secret_name = "identity-certs"
+          }
+        }
+        volume {
+          name = "devicetwin-certs"
+          secret {
+            secret_name = "devicetwin-certs"
+          }
+        }
         init_container {
           name = "create-db"
           image = "jbergknoff/postgresql-client"
@@ -132,8 +144,12 @@ resource "kubernetes_deployment" "dmscore" {
           name              = "dmscore"
           image_pull_policy = "Always"
           volume_mount {
-            mount_path = "/srv/certs"
-            name       = "certs"
+            mount_path = "/srv/identity-certs"
+            name       = "identity-certs"
+          }
+          volume_mount {
+            mount_path = "/srv/devicetwin-certs"
+            name       = "devicetwin-certs"
           }
           env {
             name  = "LOG_LEVEL"
@@ -181,6 +197,14 @@ resource "kubernetes_deployment" "dmscore" {
           env {
             name = "DMS_STORE_IDS"
             value = local.storeids
+          }
+          env {
+            name = "DMS_MQTT_HOST_ADDRESS"
+            value = local.mqtt_host_address
+          }
+          env {
+            name = "DMS_MQTT_HOST_PORT"
+            value = local.mqtt_host_port
           }
           env {
             name = "DMS_SERVICE_CLIENT_TOKEN_PROVIDER"
@@ -231,12 +255,6 @@ resource "kubernetes_deployment" "dmscore" {
           }
           port {
             container_port = 8010
-          }
-        }
-        volume {
-          name = "certs"
-          secret {
-            secret_name = "devicetwin-certs"
           }
         }
       }

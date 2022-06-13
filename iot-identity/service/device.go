@@ -21,6 +21,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-identity/models"
 
 	"github.com/everactive/dmscore/iot-identity/config/configkey"
@@ -70,7 +71,7 @@ func (id IdentityService) RegisterDevice(req *RegisterDeviceRequest) (string, er
 		return "", fmt.Errorf("the device `%s/%s/%s` is already registered", req.Brand, req.Model, req.SerialNumber)
 	}
 
-	rootCertsDir := viper.GetString(configkey.MQTTCertificatePath)
+	rootCertsDir := viper.GetString(keys.GetIdentityKey(keys.CertificatesPath))
 
 	// Create a signed certificate
 	deviceID := datastore.GenerateID()

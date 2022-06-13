@@ -9,11 +9,6 @@ resource "kubernetes_config_map" "mqtt-config" {
   }
 }
 
-moved {
-  from = module.identity.kubernetes_deployment.mqtt
-  to = kubernetes_deployment.mqtt
-}
-
 resource "kubernetes_deployment" "mqtt" {
   metadata {
     name      = "mqtt"

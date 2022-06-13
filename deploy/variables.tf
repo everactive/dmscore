@@ -61,3 +61,11 @@ variable "devicetwin_component_postgres_configmap_name" {
   description = "The configmap name with the credentials to use for the service's devicetwin database"
   type        = string
 }
+
+variable "mqtt_host_address" {
+  type = string
+}
+
+variable mqtt_host_port {
+  type = string
+}

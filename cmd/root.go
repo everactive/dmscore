@@ -9,7 +9,6 @@ import (
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
 	devicetwinfactory "github.com/everactive/dmscore/iot-devicetwin/service/factory"
 	devicetwinweb "github.com/everactive/dmscore/iot-devicetwin/web"
-	identityauth "github.com/everactive/dmscore/iot-identity/auth"
 	"github.com/everactive/dmscore/iot-identity/config/configkey"
 	identitydatastore "github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/middleware/logger"
@@ -136,15 +135,6 @@ var runCommand = cobra.Command{
 		// Start the web service
 		www := web.NewService(srv)
 
-		web.AuthMiddleWare = func(c *gin.Context) {
-			user := datastore.User{
-				Username: "static-client",
-				Role:     datastore.Superuser,
-			}
-
-			c.Set("USER", &user)
-		}
-
 		www.Run()
 	},
 }
@@ -161,7 +151,8 @@ func createDeviceTwinService(coreDB datastore.DataStore) *devicetwinweb.Service 
 	URL := viper.GetString(keys.MQTTURL)
 	port := viper.GetString(keys.MQTTPort)
 
-	certsDir := viper.GetString(keys.CertificatesPath)
+	certsDir := viper.GetString(keys.MQTTCertificatesPath)
+	log.Tracef("MQTT Certs dir: %s", certsDir)
 
 	rootCAFilename := viper.GetString(keys.MQTTRootCAFilename)
 	clientCertFilename := viper.GetString(keys.MQTTClientCertificateFilename)
@@ -254,7 +245,7 @@ func createIdentityService() *identityweb.IdentityService {
 	log.Info("Starting service (internal) on port : ", internalPort)
 	log.Info("Starting service (enroll) on port : ", enrollPort)
 
-	internalRouter := gin.New()
+	// internalRouter := gin.New()
 	enrollRouter := gin.New()
 
 	logFormat := os.Getenv("LOG_FORMAT")
@@ -263,15 +254,15 @@ func createIdentityService() *identityweb.IdentityService {
 
 		middlewareLogger := logger.New(log.StandardLogger(), logger.LogOptions{EnableStarting: true})
 
-		internalRouter.Use(middlewareLogger.HandleFunc)
+		// internalRouter.Use(middlewareLogger.HandleFunc)
 		enrollRouter.Use(middlewareLogger.HandleFunc)
 
 	} else {
-		internalRouter.Use(gin.Logger())
+		// internalRouter.Use(gin.Logger())
 		enrollRouter.Use(gin.Logger())
 	}
 
-	internalRouter.Use(identityauth.Factory(viper.GetString(configkey.AuthProvider)))
+	// internalRouter.Use(identityauth.Factory(viper.GetString(configkey.AuthProvider)))
 
 	wb.SetRouter(enrollRouter)
 

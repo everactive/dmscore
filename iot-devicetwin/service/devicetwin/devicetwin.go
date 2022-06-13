@@ -89,6 +89,8 @@ func (srv *Service) HealthHandler(payload messages.Health) error {
 		return err
 	}
 
+	log.Tracef("Health payload: %+v", payload)
+
 	// Update the last refresh on the device
 	return srv.DB.DevicePing(payload.DeviceId, payload.Refresh)
 }

@@ -22,6 +22,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"gorm.io/gorm"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -182,13 +183,17 @@ func (srv *Service) HealthHandler(client MQTT.Client, msg MQTT.Message) {
 
 	// Check to make sure it's not a device we've deleted (soft)
 	// If it isn't then we can handle it even if we don't know about the device yet (expected)
-	device, deleted, err := srv.Unscoped().DeviceGetByID(clientID)
-	if err == nil && device != nil && deleted {
-		// We've previously soft-deleted this device, which means we need to ignore it now
-		log.Tracef("Dropping messages for %s, previously deleted", device.Serial)
-		return
-	} else if err != nil {
+	device, isDeleted, err := srv.Unscoped().DeviceGetByID(clientID)
+
+	// If there's an error AND it's something other than record not found, it's a real error
+	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Errorf("Error trying to get device by id = %s: %v. Will try to handle it anyway.", clientID, err)
+	}
+
+	if isDeleted {
+		// We've previously soft-deleted this device, which means we need to ignore it now
+		log.Tracef("Dropping messages for %s (%s), previously deleted", device.Serial, device.DeviceId)
+		return
 	}
 
 	// Update the device record

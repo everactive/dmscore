@@ -8,6 +8,8 @@ const (
 
 	// AuthProvider is the string name of the provider for the factory to use (keycloak)
 	AuthProvider = "service.auth.provider"
+	// CertificatesPath is the path to the Identity component certificates
+	CertificatesPath = "certificates.path"
 	// DisableAuth is a toggle for checking for auth, if not it will use static-client for every request (auth provider must also be "disabled")
 	DisableAuth = "service.auth.disabled"
 	// DatabaseDriver is the driver (database type) to use (Postgres, memory, etc.)
@@ -22,8 +24,8 @@ const (
 	MQTTURL = "mqtt.url"
 	// MQTTPort is the port for the MQTT broker
 	MQTTPort = "mqtt.port"
-	// CertificatesPath is the file path to the certificates used for MQTT communication
-	CertificatesPath = "mqtt.certificates.path"
+	// MQTTCertificatesPath is the file path to the certificates used for MQTT communication
+	MQTTCertificatesPath = "mqtt.certificates.path"
 	// MQTTClientCertificateFilename is the filename of the client certificate to use for MQTT
 	MQTTClientCertificateFilename = "mqtt.client.certificate.filename"
 	// MQTTClientKeyFilename is the filename of the client key to use for MQTT

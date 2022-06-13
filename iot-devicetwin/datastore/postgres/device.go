@@ -51,8 +51,9 @@ func (db *DataStore) DeviceGet(deviceID string) (datastore.Device, error) {
 	}
 
 	res := tx.Preload("DeviceVersion").Where("device_id = ?", deviceID).Or("serial = ?", deviceID).First(&item)
-	if res.RowsAffected == 1 {
-		return item, res.Error
+
+	if item.IsDeleted() {
+		log.Tracef("This device serial=%s, id=%s is deleted", item.SerialNumber, item.DeviceID)
 	}
 
 	return item, res.Error
