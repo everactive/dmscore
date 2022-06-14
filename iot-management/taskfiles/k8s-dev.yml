@@ -1,0 +1,31 @@
+version: '3'
+
+vars:
+  component: iot-management
+
+tasks:
+  default:
+    desc: Build the container, push to $DOCKER_REGISTRY and restart the deployment
+    cmds:
+      - cp ~/.netrc .
+      - task: build
+      - task: push
+      - task: restart
+  build:
+    vars:
+      GIT_SUMMARY:
+        sh: git describe --tags --dirty --always
+    cmds:
+      - docker build --build-arg GIT_SUMMARY={{.GIT_SUMMARY}} -t $DOCKER_REGISTRY/{{.component}} .
+  push:
+    cmds:
+      - docker push $DOCKER_REGISTRY/{{.component}}
+  restart:
+    cmds:
+      - kubectl rollout restart deployment management -n=$NAMESPACE
+  build-and-push:
+    cmds:
+      - cp ~/.netrc .
+      - task: build
+      - task: push
+      - rm ./.netrc

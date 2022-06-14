@@ -1,0 +1,34 @@
+version: '3'
+
+vars:
+  component: iot-devicetwin
+  deployment: devicetwin
+
+tasks:
+  default:
+    cmds:
+      - cp ~/.netrc .
+      - task: build
+      - task: push
+      - task: restart
+      - rm ./.netrc
+  build:
+    desc: Build the container image
+    vars:
+      GIT_SUMMARY:
+        sh: git describe --tags --dirty --always
+    cmds:
+      - docker build --build-arg GIT_SUMMARY={{.GIT_SUMMARY}} -t $DOCKER_REGISTRY/{{.component}} .
+  push:
+    desc: Push the container image to $DOCKER_REGISTRY
+    cmds:
+      - docker push $DOCKER_REGISTRY/{{.component}}
+  restart:
+    desc: Do a rollout restart for the deployment (uses currently selected context for kubectl)
+    cmds:
+      - kubectl rollout restart deployment {{.deployment}} -n=$NAMESPACE
+  build-and-push:
+    desc: Just build and push the container image, don't restart deployment
+    cmds:
+      - task: build
+      - task: push

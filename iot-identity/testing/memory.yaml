@@ -1,0 +1,2 @@
+database.driver: memory
+database.connection.string: .

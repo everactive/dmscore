@@ -1,0 +1,113 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: devicetwin-pv-claim-devicetwin-service
+  labels:
+    app: devicetwin
+spec:
+  storageClassName: ${STORAGE_CLASS}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 0.5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devicetwin
+spec:
+  selector:
+    matchLabels:
+      app: devicetwin
+      tier: frontend
+      track: stable
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: devicetwin
+        tier: frontend
+        track: stable
+    spec:
+      initContainers:
+        - name: create-db
+          image: jbergknoff/postgresql-client
+          command: ["psql", "-d", "$(DATASOURCE)", "-f", "/sql/create-db.sql"]
+          env:
+            - name: DATASOURCE
+              valueFrom:
+                  configMapKeyRef:
+                    name: ${POSTGRES_ADMIN_CONFIGMAP}
+                    key: DATASOURCE
+          volumeMounts:
+          - name: sql
+            mountPath: /sql
+      containers:
+        - name: devicetwin
+          image: ${IMAGE}
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: certs
+              mountPath: /srv/certs
+            - name: config
+              mountPath: /srv/config
+          env:
+            - name: LOG_LEVEL
+              value: '${LOG_LEVEL}'
+            - name: LOG_FORMAT
+              value: "json"
+            - name: IOTDEVICETWIN_SERVICE_PORT
+              value: "8040"
+            - name: IOTDEVICETWIN_DATABASE_DRIVER
+              value: "postgres"
+            - name: IOTDEVICETWIN_DATABASE_SOURCE
+              valueFrom:
+                configMapKeyRef:
+                  name: ${COMPONENT_POSTGRES_CONFIGMAP_NAME}
+                  key: DATASOURCE
+            - name: IOTDEVICETWIN_MQTT_URL
+              value: "mqtt"
+            - name: IOTDEVICETWIN_MQTT_PORT
+              value: "8883"
+            - name: IOTDEVICETWIN_SERVICE_CERTIFICATES_PATH
+              value: "/srv/certs"
+            - name: IOTDEVICETWIN_SERVICE_CONFIG_PATH
+              value: "/srv/config"
+            - name: IOTDEVICETWIN_SERVICE_AUTH_PROVIDER
+              value: "disabled"
+          ports:
+            - containerPort: 8040
+      volumes:
+        - name: certs
+          secret:
+            secretName: devicetwin-certs
+        - name: config
+          persistentVolumeClaim:
+            claimName: devicetwin-pv-claim-devicetwin-service
+        - name: sql
+          configMap:
+            name: ${COMPONENT_POSTGRES_CONFIGMAP_NAME}
+            items:
+            - key: DB_CREATE_SQL
+              path: create-db.sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devicetwin
+spec:
+  selector:
+    app: devicetwin
+    tier: frontend
+  ports:
+    - port: 8040
+      protocol: TCP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devicetwin-version
+data:
+  version: '${DEVICETWIN_VERSION}'
+---

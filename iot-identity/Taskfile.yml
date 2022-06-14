@@ -1,0 +1,47 @@
+version: '3'
+
+dotenv: ['{{.HOME}}/.device-management-env', '.env']
+
+includes:
+  dev: "./taskfiles/k8s-dev.yml"
+  migrate: "./taskfiles/migrate.yaml"
+
+tasks:
+  precommit:
+    cmds:
+      - task: gofmt
+      - task: goimports
+      - task: lint
+      - task: test
+      - task: test-race
+  build:
+    desc: Build agent
+    vars:
+      GIT_SUMMARY:
+        sh: git describe --tags --dirty --always
+    cmds:
+      - go build -o identity -ldflags='-X github.com/everactive/dmscore/iot-identity/version.Version={{.GIT_SUMMARY}}' bin/identity/identity.go
+  gofmt:
+    desc: Runs gofmt on every file in the project directory
+    cmds:
+      - find . -name \*.go -exec gofmt -w {} \;
+  goimports:
+    desc: Runs goimports on every file in the project directory
+    cmds:
+      - find . -name \*.go -exec goimports -w {} \;
+  lint:
+    desc: Run the golangci-lint on the repo
+    cmds:
+      - golangci-lint run
+  test:
+    desc: Run tests for the gateway controller
+    cmds:
+      - go test ./...
+  test-race:
+    desc: Run race detection tests
+    cmds:
+      - go test ./... -race
+  generate-docs:
+    desc: Generate documentation from terraform-docs
+    cmds:
+      - terraform-docs markdown table --output-file ./README.md ./deploy/

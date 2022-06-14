@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  fmt:
+    desc: Runs gofmt on every file in the project directory
+    cmds:
+      - find . -name \*.go -exec gofmt -w {} \;
+  imports:
+    desc: Runs goimports on every file in the project directory
+    cmds:
+      - find . -name \*.go -exec goimports -w {} \;
