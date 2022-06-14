@@ -1,12 +1,37 @@
 package config
 
 import (
+	"github.com/everactive/dmscore/config/keys"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"strings"
 )
 
-var defaultValues = map[string]interface{}{}
+var defaultValues = map[string]interface{}{
+	keys.MQTTHealthTopic:                            "devices/health/+",
+	keys.MQTTPubTopic:                               "devices/pub/+",
+	keys.CertificatesPath:                           "/srv/certs",
+	keys.MQTTClientCertificateFilename:              "server.crt",
+	keys.MQTTClientKeyFilename:                      "server.key",
+	keys.MQTTRootCAFilename:                         "ca.crt",
+	keys.MQTTClientIDPrefix:                         "devicetwin",
+	keys.MQTTURL:                                    "mqtt",
+	keys.MQTTPort:                                   "8883",
+	keys.ServiceScheme:                              "http",
+	keys.ServicePort:                                "8010",
+	keys.ServiceHost:                                "localhost:8080",
+	keys.DatabaseDriver:                             "postgres",
+	keys.DatabaseName:                               "management",
+	keys.GetIdentityKey(keys.DatabaseDriver):        "postgres",
+	keys.GetIdentityKey(keys.DatabaseName):          "identity",
+	keys.GetIdentityKey(keys.ServicePortInternal):   "8041",
+	keys.GetIdentityKey(keys.ServicePortEnroll):     "8040",
+	keys.GetIdentityKey(keys.MigrationsSourceURL):   "/migrations/identity",
+	keys.GetDeviceTwinKey(keys.DatabaseDriver):      "postgres",
+	keys.GetDeviceTwinKey(keys.DatabaseName):        "devicetwin",
+	keys.GetDeviceTwinKey(keys.ServicePort):         "8030",
+	keys.GetDeviceTwinKey(keys.MigrationsSourceURL): "/migrations/devicetwin",
+}
 
 const (
 	envPrefix = "DMS"

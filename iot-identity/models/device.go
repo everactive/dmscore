@@ -28,6 +28,7 @@ type RegisteredDevice struct {
 	DeviceKey    string
 	Status       Status
 	DeviceData   string
+	DeviceID     string
 }
 
 func (rd RegisteredDevice) TableName() string {

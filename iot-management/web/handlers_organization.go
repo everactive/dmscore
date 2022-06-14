@@ -127,7 +127,13 @@ func (wb Service) OrganizationCreateHandler(c *gin.Context) {
 		formatStandardResponse("OrgCreate", err.Error(), c)
 		return
 	}
-	formatStandardResponse("", "", c)
+
+	orgLookup, err := wb.Manage.OrganizationGet(org.Name)
+	if err != nil {
+		formatStandardResponse("OrgUpdate", err.Error(), c)
+		return
+	}
+	formatOrganizationResponse(orgLookup, c.Writer)
 }
 
 // OrganizationUpdateHandler updates an organization

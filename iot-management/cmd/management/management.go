@@ -22,13 +22,13 @@ package management
 
 import (
 	"fmt"
+	"github.com/everactive/dmscore/versions"
 	"os"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
 
 	"github.com/everactive/dmscore/iot-management/auth"
-	"github.com/everactive/dmscore/iot-management/versions"
 	"github.com/everactive/ginkeycloak"
 	"github.com/spf13/cobra"
 

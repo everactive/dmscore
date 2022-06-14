@@ -21,11 +21,11 @@ package web
 
 import (
 	"encoding/json"
+	"github.com/everactive/dmscore/versions"
 	"net/http"
 	"strings"
 	"text/template"
 
-	"github.com/everactive/dmscore/iot-management/versions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
 	log "github.com/sirupsen/logrus"

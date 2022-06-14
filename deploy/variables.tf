@@ -43,12 +43,21 @@ variable "cluster_namespace" {
   type        = string
 }
 
-variable "component_postgres_configmap_name" {
-  description = "The configmap name with the credentials to use for the service's database"
+variable "core_component_postgres_configmap_name" {
+  description = "The configmap name with the credentials to use for the service's core database"
   type        = string
 }
 
 variable "log_level" {
   description = "The log level for the component"
+  type        = string
+}
+
+variable "identity_component_postgres_configmap_name" {
+  description = "The configmap name with the credentials to use for the service's identity database"
+  type        = string
+}
+variable "devicetwin_component_postgres_configmap_name" {
+  description = "The configmap name with the credentials to use for the service's devicetwin database"
   type        = string
 }

@@ -52,8 +52,6 @@ const (
 	ServiceScheme = "service.scheme"
 	// ServiceHost is the service host name
 	ServiceHost = "service.host"
-	// JwtSecret is the JWT secret value
-	JwtSecret = "service.jwtsecret" //nolint
 )
 
 func GetIdentityKey(key string) string {

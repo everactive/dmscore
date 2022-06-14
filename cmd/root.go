@@ -43,6 +43,11 @@ import (
 
 func init() {
 	Root.AddCommand(&runCommand)
+
+	Root.AddCommand(&createSuperuser)
+	createSuperuser.Flags().String("username", "", "The username of the user to create (must match Ubuntu SSO)")
+	createSuperuser.Flags().String("name", "", "The name of the user to create (must match Ubuntu SSO)")
+	createSuperuser.Flags().String("email", "", "The email address of the user to create (must match Ubuntu SSO)")
 }
 
 var Root = cobra.Command{

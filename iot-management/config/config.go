@@ -23,12 +23,11 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/everactive/dmscore/versions"
 	"os"
 	"strings"
 
 	"github.com/everactive/dmscore/iot-management/config/configkey"
-	"github.com/everactive/dmscore/iot-management/versions"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"

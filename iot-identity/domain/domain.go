@@ -79,7 +79,7 @@ func (Credentials) FromRegisteredDeviceModel(m *models.RegisteredDevice, c *Cred
 func (Enrollment) FromRegisteredDeviceModel(m *models.RegisteredDevice, e *Enrollment) *Enrollment {
 	e.Status = m.Status
 	e.DeviceData = m.DeviceData
-
+	e.ID = m.DeviceID
 	Device{}.FromRegisteredDeviceModel(m, &e.Device)
 	Credentials{}.FromRegisteredDeviceModel(m, &e.Credentials)
 
