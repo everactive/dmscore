@@ -1,0 +1,38 @@
+version: '3'
+
+tasks:
+  add:
+    desc: Add a migration
+    cmds:
+      - migrate create -ext sql -dir db/migrations $MIGRATION_NAME
+  up:
+    desc: Run migrations (up)
+    cmds:
+      - |
+        if [ -z $N ]; then
+          echo N must be set, either a number of migrations or "all"
+          exit 1
+        fi
+        if [ $N == "all" ]; then
+          migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations up
+          exit 0
+        else
+          migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations up $N
+          exit 0
+        fi
+
+  down:
+    desc: Run migrations (down)
+    cmds:
+      - |
+        if [ -z $N ]; then
+          echo N must be set, either a number of migrations or "all"
+          exit 1
+        fi
+        if [ $N == "all" ]; then
+          migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations down
+          exit 0
+        else
+          migrate -database $DEVICETWIN_POSTGRES_DATASOURCE -path ./db/migrations down $N
+          exit 0
+        fi

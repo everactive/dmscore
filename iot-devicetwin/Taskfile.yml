@@ -1,0 +1,57 @@
+  version: '3'
+
+  dotenv: [ '{{.HOME}}/.device-management-env', '.env' ]
+
+  includes:
+    dev: "./taskfiles/k8s-dev.yml"
+    docs: "./taskfiles/docs.yml"
+    go: "./taskfiles/go.yml"
+    migrate: "./taskfiles/migrate.yaml"
+
+  tasks:
+    precommit:
+      cmds:
+        - task: gofmt
+        - task: goimports
+        - task: lint
+        - task: test
+        - task: test-race
+        - task: build
+        - task: generate-docs
+    gofmt:
+      desc: Runs gofmt on every file in the project directory
+      cmds:
+        - find . -name \*.go -exec gofmt -w {} \;
+    goimports:
+      desc: Runs goimports on every file in the project directory
+      cmds:
+        - find . -name \*.go -exec goimports -w {} \;
+    build:
+      desc: Build the devicetwin server
+      vars:
+        GIT_SUMMARY:
+          sh: git describe --tags --dirty --always
+      cmds:
+        - go build -o devicetwin -ldflags='-X github.com/everactive/dmscore/iot-devicetwin/version.Version={{.GIT_SUMMARY}}' bin/devicetwin/devicetwin.go
+    generate-message-structs:
+      desc: This will generate the Go structs from the schema definitions
+      cmds:
+        - mkdir -p pkg/messages
+        - schema-generate -o pkg/messages/messages.go -p messages ./schemas/schemas.json
+        - schema-generate -o pkg/messages/rest.go -p messages ./schemas/rest_schemas.json
+    lint:    
+      desc: Run the golangci-lint on the repo    
+      cmds:    
+        - golangci-lint run
+    test:
+      desc: Run the short tests for the whole repo
+      cmds:
+        - go test -short $(go list ./... | grep -v vendor) -count 1
+    test-race:
+      desc: Run race detection tests
+      cmds:
+        - go test ./... -race
+    generate-docs:
+      desc: Generate documentation from terraform-docs
+      cmds:
+        - terraform-docs markdown table --output-file ./README.md ./deploy/

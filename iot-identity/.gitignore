@@ -1,0 +1,9 @@
+.idea/
+main
+vendor/*/
+.secret
+.coverage/
+certs/
+run
+.netrc
+.env

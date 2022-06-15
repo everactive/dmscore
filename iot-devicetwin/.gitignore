@@ -1,0 +1,13 @@
+.idea/
+main
+vendor/*/
+.secret
+main
+.coverage/
+certs/
+run
+.netrc
+/devicetwin
+asyncapi-docs
+.env
+data/
