@@ -208,15 +208,15 @@ resource "kubernetes_deployment" "dmscore" {
           }
           env {
             name = "DMS_SERVICE_CLIENT_TOKEN_PROVIDER"
-            value = "disabled"
+            value = local.client_token_provider
           }
           env {
             name = "DMS_SERVICE_AUTH_PROVIDER"
-            value = "disabled"
+            value = local.auth_provider
           }
           env {
             name = "DMS_SERVICE_AUTH_DISABLED"
-            value = true
+            value = local.auth_disabled
           }
           env {
             name  = "DMS_STATIC_CLIENT_TOKEN"

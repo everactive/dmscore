@@ -22,4 +22,7 @@ locals {
   devicetwin_component_postgres_configmap_name = var.devicetwin_component_postgres_configmap_name
   mqtt_host_address = var.mqtt_host_address
   mqtt_host_port = var.mqtt_host_port
+  auth_provider = var.auth_provider
+  client_token_provider = var.client_token_provider
+  auth_disabled = var.auth_disabled
 }

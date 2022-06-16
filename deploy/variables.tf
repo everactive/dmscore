@@ -69,3 +69,12 @@ variable "mqtt_host_address" {
 variable mqtt_host_port {
   type = string
 }
+variable auth_provider {
+  type = string
+}
+variable client_token_provider {
+  type = string
+}
+variable auth_disabled {
+  type = bool
+}
