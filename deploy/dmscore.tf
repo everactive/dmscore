@@ -222,6 +222,7 @@ resource "kubernetes_deployment" "dmscore" {
             name  = "DMS_STATIC_CLIENT_TOKEN"
             value_from {
               secret_key_ref {
+                name = "dmscore-secrets"
                 key = "static-token"
               }
             }
