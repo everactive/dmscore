@@ -221,9 +221,8 @@ resource "kubernetes_deployment" "dmscore" {
           env {
             name  = "DMS_STATIC_CLIENT_TOKEN"
             value_from {
-              config_map_key_ref {
-                name = "dmscore-config"
-                key = "SCHEME"
+              secret_key_ref {
+                key = "static-token"
               }
             }
           }
