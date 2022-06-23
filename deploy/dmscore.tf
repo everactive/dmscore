@@ -258,11 +258,11 @@ resource "kubernetes_deployment" "dmscore" {
             }
           }
           port {
-            name = "management_service"
+            name = "mgmt-svc"
             container_port = 8010
           }
           port {
-            name = "identity_enroll"
+            name = "id-svc"
             container_port = 8040
           }
         }
