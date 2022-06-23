@@ -245,6 +245,10 @@ resource "kubernetes_deployment" "dmscore" {
             }
           }
           env {
+            name = "DMS_IDENTITY_SERVICE_PORT_ENROLL"
+            value = local.identity_service_enroll_port
+          }
+          env {
             name = "DMS_IDENTITY_DATABASE_CONNECTION_STRING"
             value_from {
               config_map_key_ref {
@@ -254,7 +258,12 @@ resource "kubernetes_deployment" "dmscore" {
             }
           }
           port {
+            name = "management_service"
             container_port = 8010
+          }
+          port {
+            name = "identity_enroll"
+            container_port = local.identity_service_enroll_port
           }
         }
       }
@@ -275,6 +284,24 @@ resource "kubernetes_service" "dmscore-internal" {
     }
     port {
       port        = "8010"
+      protocol = "TCP"
+    }
+  }
+}
+
+resource "kubernetes_service" "dmscore-enroll" {
+  metadata {
+    name      = "dmscore-enroll"
+    namespace = local.namespace
+  }
+  spec {
+    selector = {
+      app   = "dmscore"
+      tier = "frontend"
+      track = "stable"
+    }
+    port {
+      port        = local.identity_service_enroll_port
       protocol = "TCP"
     }
   }

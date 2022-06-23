@@ -238,11 +238,8 @@ func createIdentityService() *identityweb.IdentityService {
 	identityweb.Logger = log.StandardLogger()
 	wb := identityweb.NewIdentityService(srv, log.StandardLogger())
 
-	// log.Fatal(w.Run())
-	internalPort := viper.GetString(keys.GetIdentityKey(keys.ServicePortInternal))
 	enrollPort := viper.GetString(keys.GetIdentityKey(keys.ServicePortEnroll))
 
-	log.Info("Starting service (internal) on port : ", internalPort)
 	log.Info("Starting service (enroll) on port : ", enrollPort)
 
 	// internalRouter := gin.New()
@@ -254,15 +251,11 @@ func createIdentityService() *identityweb.IdentityService {
 
 		middlewareLogger := logger.New(log.StandardLogger(), logger.LogOptions{EnableStarting: true})
 
-		// internalRouter.Use(middlewareLogger.HandleFunc)
 		enrollRouter.Use(middlewareLogger.HandleFunc)
 
 	} else {
-		// internalRouter.Use(gin.Logger())
 		enrollRouter.Use(gin.Logger())
 	}
-
-	// internalRouter.Use(identityauth.Factory(viper.GetString(configkey.AuthProvider)))
 
 	wb.SetRouter(enrollRouter)
 

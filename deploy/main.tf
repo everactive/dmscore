@@ -25,4 +25,5 @@ locals {
   auth_provider = var.auth_provider
   client_token_provider = var.client_token_provider
   auth_disabled = var.auth_disabled
+  identity_service_enroll_port = 8040
 }
