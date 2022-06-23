@@ -30,15 +30,18 @@ import (
 
 // Action is the log of an action request
 type Action struct {
-	ID             int64
-	Created        time.Time
-	Modified       time.Time
-	OrganizationID string
-	DeviceID       string
-	ActionID       string
-	Action         string
-	Status         string
-	Message        string
+	gorm.Model
+	OrganizationID string `gorm:"column:org_id"`
+	DeviceID       string `gorm:"column:device_id"`
+	ActionID       string `gorm:"column:action_id"`
+	Action         string `gorm:"column:action"`
+	Status         string `gorm:"column:status"`
+	Message        string `gorm:"column:message"`
+}
+
+// TableName is the Postgres table name to use
+func (Action) TableName() string {
+	return "action"
 }
 
 // Device the repository definition of a device

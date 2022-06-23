@@ -20,8 +20,6 @@
 package devicetwin
 
 import (
-	"time"
-
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore"
@@ -36,8 +34,6 @@ func (srv *Service) ActionCreate(orgID, deviceID string, action messages.Subscri
 		ActionID:       action.Id,
 		Action:         action.Action,
 		Status:         "requested",
-		Created:        time.Now(),
-		Modified:       time.Now(),
 	}
 	_, err := srv.DB.ActionCreate(act)
 	return err
@@ -59,8 +55,8 @@ func (srv *Service) ActionList(orgID, deviceID string) ([]domain.Action, error) 
 	// Map the database item to the domain item
 	for _, act := range actions {
 		list = append(list, domain.Action{
-			Created:        act.Created,
-			Modified:       act.Modified,
+			Created:        act.CreatedAt,
+			Modified:       act.UpdatedAt,
 			OrganizationID: act.OrganizationID,
 			DeviceID:       act.DeviceID,
 			ActionID:       act.ActionID,
