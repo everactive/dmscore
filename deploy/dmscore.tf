@@ -263,7 +263,7 @@ resource "kubernetes_deployment" "dmscore" {
           }
           port {
             name = "identity_enroll"
-            container_port = local.identity_service_enroll_port
+            container_port = 8040
           }
         }
       }
