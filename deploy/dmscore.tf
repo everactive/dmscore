@@ -1,22 +1,22 @@
 resource "kubernetes_secret" "dmscore-secrets" {
   metadata {
-    name = "dmscore-secrets"
+    name      = "dmscore-secrets"
     namespace = local.namespace
   }
   data = {
-    static-token=local.static_client_token
+    static-token = local.static_client_token
   }
 }
 
 resource "kubernetes_config_map" "dmscore-config" {
   metadata {
-    name = "dmscore-config"
+    name      = "dmscore-config"
     namespace = local.namespace
   }
 
   data = {
-    HOST=local.host
-    SCHEME=local.scheme
+    HOST   = local.host
+    SCHEME = local.scheme
   }
 }
 
@@ -30,7 +30,7 @@ resource "kubernetes_deployment" "dmscore" {
     selector {
       match_labels = {
         app   = "dmscore"
-        tier = "frontend"
+        tier  = "frontend"
         track = "stable"
       }
     }
@@ -38,7 +38,7 @@ resource "kubernetes_deployment" "dmscore" {
       metadata {
         labels = {
           app   = "dmscore"
-          tier = "frontend"
+          tier  = "frontend"
           track = "stable"
         }
       }
@@ -48,7 +48,7 @@ resource "kubernetes_deployment" "dmscore" {
           config_map {
             name = local.component_postgres_configmap_name
             items {
-              key = "DB_CREATE_SQL"
+              key  = "DB_CREATE_SQL"
               path = "create-db.sql"
             }
           }
@@ -58,7 +58,7 @@ resource "kubernetes_deployment" "dmscore" {
           config_map {
             name = local.identity_component_postgres_configmap_name
             items {
-              key = "DB_CREATE_SQL"
+              key  = "DB_CREATE_SQL"
               path = "create-db.sql"
             }
           }
@@ -68,7 +68,7 @@ resource "kubernetes_deployment" "dmscore" {
           config_map {
             name = local.devicetwin_component_postgres_configmap_name
             items {
-              key = "DB_CREATE_SQL"
+              key  = "DB_CREATE_SQL"
               path = "create-db.sql"
             }
           }
@@ -86,15 +86,15 @@ resource "kubernetes_deployment" "dmscore" {
           }
         }
         init_container {
-          name = "create-db"
-          image = "jbergknoff/postgresql-client"
+          name    = "create-db"
+          image   = "jbergknoff/postgresql-client"
           command = ["psql", "-d", "$(DATASOURCE)", "-f", "/sql/create-db.sql"]
           env {
             name = "DATASOURCE"
             value_from {
               config_map_key_ref {
                 name = local.postgres_admin_configmap
-                key = "DATASOURCE"
+                key  = "DATASOURCE"
               }
             }
           }
@@ -104,15 +104,15 @@ resource "kubernetes_deployment" "dmscore" {
           }
         }
         init_container {
-          name = "create-db-identity"
-          image = "jbergknoff/postgresql-client"
+          name    = "create-db-identity"
+          image   = "jbergknoff/postgresql-client"
           command = ["psql", "-d", "$(DATASOURCE)", "-f", "/sql/create-db.sql"]
           env {
             name = "DATASOURCE"
             value_from {
               config_map_key_ref {
                 name = local.postgres_admin_configmap
-                key = "DATASOURCE"
+                key  = "DATASOURCE"
               }
             }
           }
@@ -122,15 +122,15 @@ resource "kubernetes_deployment" "dmscore" {
           }
         }
         init_container {
-          name = "create-db-devicetwin"
-          image = "jbergknoff/postgresql-client"
+          name    = "create-db-devicetwin"
+          image   = "jbergknoff/postgresql-client"
           command = ["psql", "-d", "$(DATASOURCE)", "-f", "/sql/create-db.sql"]
           env {
             name = "DATASOURCE"
             value_from {
               config_map_key_ref {
                 name = local.postgres_admin_configmap
-                key = "DATASOURCE"
+                key  = "DATASOURCE"
               }
             }
           }
@@ -160,79 +160,79 @@ resource "kubernetes_deployment" "dmscore" {
             value = "postgres"
           }
           env {
-            name  = "DMS_DATABASE_CONNECTION_STRING"
+            name = "DMS_DATABASE_CONNECTION_STRING"
             value_from {
               config_map_key_ref {
                 name = local.component_postgres_configmap_name
-                key = "DATASOURCE"
+                key  = "DATASOURCE"
               }
             }
           }
           env {
-            name  = "DMS_SERVICE_HOST"
+            name = "DMS_SERVICE_HOST"
             value_from {
               config_map_key_ref {
                 name = "dmscore-config"
-                key = "HOST"
+                key  = "HOST"
               }
             }
           }
           env {
-            name  = "DMS_SERVICE_SCHEME"
+            name = "DMS_SERVICE_SCHEME"
             value_from {
               config_map_key_ref {
                 name = "dmscore-config"
-                key = "SCHEME"
+                key  = "SCHEME"
               }
             }
           }
           env {
-            name = "DMS_STORE_URL"
+            name  = "DMS_STORE_URL"
             value = "https://api.snapcraft.io/api/v1/"
           }
           env {
-            name = "LOG_FORMAT"
+            name  = "LOG_FORMAT"
             value = "json"
           }
           env {
-            name = "DMS_STORE_IDS"
+            name  = "DMS_STORE_IDS"
             value = local.storeids
           }
           env {
-            name = "DMS_MQTT_HOST_ADDRESS"
+            name  = "DMS_MQTT_HOST_ADDRESS"
             value = local.mqtt_host_address
           }
           env {
-            name = "DMS_MQTT_HOST_PORT"
+            name  = "DMS_MQTT_HOST_PORT"
             value = local.mqtt_host_port
           }
           env {
-            name = "DMS_SERVICE_CLIENT_TOKEN_PROVIDER"
+            name  = "DMS_SERVICE_CLIENT_TOKEN_PROVIDER"
             value = local.client_token_provider
           }
           env {
-            name = "DMS_SERVICE_AUTH_PROVIDER"
+            name  = "DMS_SERVICE_AUTH_PROVIDER"
             value = local.auth_provider
           }
           env {
-            name = "DMS_SERVICE_AUTH_DISABLED"
+            name  = "DMS_SERVICE_AUTH_DISABLED"
             value = local.auth_disabled
           }
           env {
-            name  = "DMS_STATIC_CLIENT_TOKEN"
+            name = "DMS_STATIC_CLIENT_TOKEN"
             value_from {
               secret_key_ref {
                 name = "dmscore-secrets"
-                key = "static-token"
+                key  = "static-token"
               }
             }
           }
           env {
-            name = "DMS_SERVICE_JWTSECRET"
+            name  = "DMS_SERVICE_JWTSECRET"
             value = "this-is-a-really-long-secret-for-jwt-do-not-use-in-production"
           }
           env {
-            name = "DMS_SERVICE_MIGRATIONS_SOURCE"
+            name  = "DMS_SERVICE_MIGRATIONS_SOURCE"
             value = "/migrations/dmscore"
           }
           env {
@@ -240,12 +240,12 @@ resource "kubernetes_deployment" "dmscore" {
             value_from {
               config_map_key_ref {
                 name = local.devicetwin_component_postgres_configmap_name
-                key = "DATASOURCE"
+                key  = "DATASOURCE"
               }
             }
           }
           env {
-            name = "DMS_IDENTITY_SERVICE_PORT_ENROLL"
+            name  = "DMS_IDENTITY_SERVICE_PORT_ENROLL"
             value = local.identity_service_enroll_port
           }
           env {
@@ -253,16 +253,16 @@ resource "kubernetes_deployment" "dmscore" {
             value_from {
               config_map_key_ref {
                 name = local.identity_component_postgres_configmap_name
-                key = "DATASOURCE"
+                key  = "DATASOURCE"
               }
             }
           }
           port {
-            name = "mgmt-svc"
+            name           = "mgmt-svc"
             container_port = 8010
           }
           port {
-            name = "id-svc"
+            name           = "id-svc"
             container_port = 8040
           }
         }
@@ -279,11 +279,11 @@ resource "kubernetes_service" "dmscore-internal" {
   spec {
     selector = {
       app   = "dmscore"
-      tier = "frontend"
+      tier  = "frontend"
       track = "stable"
     }
     port {
-      port        = "8010"
+      port     = "8010"
       protocol = "TCP"
     }
   }
@@ -297,11 +297,11 @@ resource "kubernetes_service" "dmscore-enroll" {
   spec {
     selector = {
       app   = "dmscore"
-      tier = "frontend"
+      tier  = "frontend"
       track = "stable"
     }
     port {
-      port        = local.identity_service_enroll_port
+      port     = local.identity_service_enroll_port
       protocol = "TCP"
     }
   }
