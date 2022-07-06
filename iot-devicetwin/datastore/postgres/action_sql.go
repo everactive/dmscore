@@ -25,11 +25,11 @@ values ($1,$2,$3,$4,$5,$6) RETURNING id`
 
 const updateActionSQL = `
 update action
-set status=$2, message=$3, modified=current_timestamp
+set status=$2, message=$3, updated_at=current_timestamp
 where action_id=$1`
 
 const listActionSQL = `
-select id, created, modified, org_id, device_id, action_id, action, status, message
+select id, created_at, updated_at, org_id, device_id, action_id, action, status, message
 from action
 where org_id=$1 and device_id=$2
 order by created desc`

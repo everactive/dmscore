@@ -21,6 +21,7 @@ package web
 
 import (
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 
@@ -71,6 +72,7 @@ func (wb Service) OrganizationListHandler(c *gin.Context) {
 
 	user, err := getUserFromContextAndCheckPermissions(c, datastore.Standard)
 	if user == nil || err != nil {
+		log.Error(err)
 		formatStandardResponse("UserAuth", "", c)
 		return
 	}

@@ -1,6 +1,6 @@
 resource "kubernetes_config_map" "mqtt-config" {
   metadata {
-    name = "mqtt-config"
+    name      = "mqtt-config"
     namespace = local.namespace
   }
 
@@ -18,7 +18,7 @@ resource "kubernetes_deployment" "mqtt" {
     selector {
       match_labels = {
         app   = "mqtt"
-        tier = "backend"
+        tier  = "backend"
         track = "stable"
       }
     }
@@ -26,7 +26,7 @@ resource "kubernetes_deployment" "mqtt" {
       metadata {
         labels = {
           app   = "mqtt"
-          tier = "backend"
+          tier  = "backend"
           track = "stable"
         }
       }
@@ -50,20 +50,20 @@ resource "kubernetes_deployment" "mqtt" {
             container_port = 31883
           }
           liveness_probe {
-            failure_threshold = 3
+            failure_threshold     = 3
             initial_delay_seconds = 10
-            period_seconds = 10
-            success_threshold = 1
+            period_seconds        = 10
+            success_threshold     = 1
             tcp_socket {
               port = "31883"
             }
             timeout_seconds = 2
           }
           readiness_probe {
-            failure_threshold = 3
+            failure_threshold     = 3
             initial_delay_seconds = 10
-            period_seconds = 10
-            success_threshold = 1
+            period_seconds        = 10
+            success_threshold     = 1
             tcp_socket {
               port = "31883"
             }
@@ -75,7 +75,7 @@ resource "kubernetes_deployment" "mqtt" {
           config_map {
             name = "mqtt-config"
             items {
-              key = "iot.conf"
+              key  = "iot.conf"
               path = "mosquitto.conf"
             }
           }
@@ -98,12 +98,12 @@ resource "kubernetes_service" "mqtt" {
   }
   spec {
     selector = {
-      app   = "mqtt"
+      app  = "mqtt"
       tier = "backend"
     }
     port {
-      name = "mqtts"
-      port        = "8883"
+      name     = "mqtts"
+      port     = "8883"
       protocol = "TCP"
     }
   }

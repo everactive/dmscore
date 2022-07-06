@@ -21,6 +21,7 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 var AuthMiddleWare gin.HandlerFunc
@@ -29,6 +30,7 @@ func (wb Service) authMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := wb.checkIsStandardAndGetUserFromJWT(c)
 		if err != nil {
+			log.Error(err)
 			formatStandardResponse("UserAuth", "", c)
 			return
 		}

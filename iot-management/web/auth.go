@@ -47,8 +47,6 @@ func (wb Service) checkPermissionsAndGetUserFromJWT(c *gin.Context, minimumAutho
 	authProvider := strings.ToLower(viper.GetString(configkey.AuthProvider))
 	log.Tracef("Auth provider: %s, Auth-Type: %s", authProvider, authType)
 
-	authType = "static-client"
-
 	if (authProvider == "static-client" || authProvider == "keycloak") && (authType == "static-client" || authType == "keycloak") {
 		token := c.GetHeader("Authorization")
 		log.Tracef("Authorization token: %s", token)

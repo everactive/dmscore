@@ -21,7 +21,7 @@ package postgres
 
 import (
 	"errors"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore"
 )
@@ -37,23 +37,28 @@ func getDeviceIDIfSerial(db *DataStore, deviceID string) (string, error) {
 
 // ActionCreate log an new action
 func (db *DataStore) ActionCreate(act datastore.Action) (int64, error) {
-	var id int64
-	err := db.QueryRow(createActionSQL, act.OrganizationID, act.DeviceID, act.ActionID, act.Action, act.Status, act.Message).Scan(&id)
-	if err != nil {
-		log.Printf("Error creating action %s/%s: %v\n", act.DeviceID, act.ActionID, err)
+	res := db.gormDB.Create(&act)
+	if res.Error != nil {
+		log.Error(res.Error)
+		return 0, res.Error
 	}
 
-	return id, err
+	return int64(act.ID), nil
 }
 
 // ActionUpdate updates an action record
 func (db *DataStore) ActionUpdate(actionID, status, message string) error {
-	_, err := db.Exec(updateActionSQL, actionID, status, message)
-	if err != nil {
-		log.Printf("Error updating the device: %v\n", err)
+	res := db.gormDB.Where("actionID = ?", actionID).Save(&datastore.Action{
+		Status:  status,
+		Message: message,
+	})
+
+	if res.Error != nil {
+		log.Error(res.Error)
+		return res.Error
 	}
 
-	return err
+	return nil
 }
 
 // ActionListForDevice lists the actions for a device
@@ -63,26 +68,11 @@ func (db *DataStore) ActionListForDevice(orgID, deviceID string) ([]datastore.Ac
 		deviceID = newDeviceID
 	}
 
-	rows, err := db.Query(listActionSQL, orgID, deviceID)
-	if err != nil {
-		log.Printf("Error retrieving actions: %v\n", err)
-		return nil, err
-	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			log.Printf("Error attempting to close rows: %+v", err)
-		}
-	}()
-
 	actions := []datastore.Action{}
-	for rows.Next() {
-		item := datastore.Action{}
-		err := rows.Scan(&item.ID, &item.Created, &item.Modified, &item.OrganizationID, &item.DeviceID, &item.ActionID, &item.Action, &item.Status, &item.Message)
-		if err != nil {
-			return nil, err
-		}
-		actions = append(actions, item)
+	res := db.gormDB.Where("org_id = ? AND device_id = ?", orgID, deviceID).Find(&actions)
+	if res.Error != nil {
+		log.Error(res.Error)
+		return actions, res.Error
 	}
 
 	return actions, nil

@@ -62,8 +62,8 @@ func NewStore() *Store {
 			{DeviceID: testID1, Name: "example-snap", InstalledSize: testInstalledSize, Status: "active"},
 		},
 		Actions: []datastore.Action{
-			{ID: testID1, OrganizationID: "abc", DeviceID: "c333", Action: "list", Status: ""},
-			{ID: testID2, OrganizationID: "abc", DeviceID: "c333", Action: "list", Status: ""},
+			{Model: gorm.Model{ID: testID1}, OrganizationID: "abc", DeviceID: "c333", Action: "list", Status: ""},
+			{Model: gorm.Model{ID: testID2}, OrganizationID: "abc", DeviceID: "c333", Action: "list", Status: ""},
 		},
 		DeviceVersions: []datastore.DeviceVersion{
 			{Model: gorm.Model{ID: testID1}, DeviceID: testID3, KernelVersion: "kernel-123", OSVersionID: "core-123", Series: "16"},
@@ -225,9 +225,9 @@ func (mem *Store) ActionCreate(act datastore.Action) (int64, error) {
 	mem.lock.Lock()
 	defer mem.lock.Unlock()
 
-	act.ID = int64(len(mem.Actions) + 1)
+	act.ID = uint(len(mem.Actions) + 1)
 	mem.Actions = append(mem.Actions, act)
-	return act.ID, nil
+	return int64(act.ID), nil
 }
 
 // ActionUpdate updates an action log
@@ -241,7 +241,7 @@ func (mem *Store) ActionUpdate(actionID, status, message string) error {
 			a.Status = status
 			a.Message = message
 		}
-		a.Modified = time.Now()
+		a.UpdatedAt = time.Now()
 		actions = append(actions, a)
 	}
 	mem.Actions = actions
