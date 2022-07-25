@@ -40,7 +40,7 @@ type devicesField struct {
 func (wb IdentityService) DeviceList(context *gin.Context) {
 	devices, err := wb.Identity.DeviceList(context.Param("orgid"))
 	if err != nil {
-		log.Println("Error fetching devices:", err)
+		log.Error("fetching devices:", err)
 		formatStandardResponse("DeviceList", err.Error(), context.Writer)
 		return
 	}
@@ -61,7 +61,7 @@ func (wb IdentityService) DeviceList(context *gin.Context) {
 func (wb IdentityService) DeviceGet(context *gin.Context) {
 	en, err := wb.Identity.DeviceGet(context.Param("orgid"), context.Param("device"))
 	if err != nil {
-		log.Printf("Error fetching device `%s`: %v\n", context.Param("device"), err)
+		log.Errorf("fetching device `%s`: %v", context.Param("device"), err)
 		formatStandardResponse("DeviceGet", err.Error(), context.Writer)
 		return
 	}
@@ -80,7 +80,7 @@ func (wb IdentityService) DeviceUpdate(context *gin.Context) {
 
 	err = wb.Identity.DeviceUpdate(orgid, device, request)
 	if err != nil {
-		log.Printf("Error updating device `%s`: %v\n", device, err)
+		log.Errorf("updating device `%s`: %v", device, err)
 		formatStandardResponse("DeviceUpdate", err.Error(), context.Writer)
 		return
 	}
@@ -91,7 +91,7 @@ func (wb IdentityService) DeviceUpdate(context *gin.Context) {
 func (wb IdentityService) DeleteDevice(context *gin.Context) {
 	id, err := wb.Identity.DeleteDevice(context.Param("deviceid"))
 	if err != nil {
-		log.Println("Error deleting device:", err)
+		log.Error("deleting device: ", err)
 		formatStandardResponse("DeleteDevice", err.Error(), context.Writer)
 		return
 	}
@@ -109,7 +109,7 @@ func (wb IdentityService) RegisterDevice(context *gin.Context) {
 
 	id, err := wb.Identity.RegisterDevice(request)
 	if err != nil {
-		log.Println("Error registering device:", err)
+		log.Error("registering device: ", err)
 		formatStandardResponse("RegDevice", err.Error(), context.Writer)
 		return
 	}
@@ -144,7 +144,7 @@ func (wb IdentityService) EnrollDevice(c *gin.Context) {
 
 	en, err := wb.Identity.EnrollDevice(&req)
 	if err != nil {
-		log.Println("Error enrolling device:", err)
+		log.Error("enrolling device: ", err)
 		formatStandardResponse("EnrollDevice", err.Error(), c.Writer)
 		return
 	}

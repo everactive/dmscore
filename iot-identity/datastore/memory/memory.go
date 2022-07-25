@@ -21,9 +21,10 @@
 package memory
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/everactive/dmscore/iot-identity/models"
 
+	"github.com/everactive/dmscore/iot-identity/models"
 	"github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/domain"
 )
@@ -173,7 +174,7 @@ func (mem *Store) DeviceGet(brand, model, serial string) (*domain.Enrollment, er
 			return &en, nil
 		}
 	}
-	return nil, fmt.Errorf("the device `%s/%s/%s` is not registered", brand, model, serial)
+	return nil, fmt.Errorf("the device `%s/%s/%s` is not registered: %w", brand, model, serial, sql.ErrNoRows)
 }
 
 // DeviceEnroll enrolls a device with the IoT service

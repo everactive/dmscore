@@ -214,7 +214,7 @@ func TestIdentityService_RegisterDevice(t *testing.T) {
 		{"valid", args{req1}, false},
 		{"invalid", args{req2}, true},
 		{"invalid-org", args{req3}, true},
-		{"duplicate-device", args{req4}, true},
+		{"already-registered", args{req4}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -235,6 +235,7 @@ func TestIdentityService_RegisterDevice(t *testing.T) {
 
 func TestIdentityService_Enroll(t *testing.T) {
 	viper.Set(configkey.MQTTCertificatePath, "../datastore/test_data")
+	viper.Set(configkey.DefaultOrganization, "Example Inc")
 	db := memory.NewStore()
 	req1 := datastore.DeviceEnrollRequest{
 		Brand:        "canonical",
@@ -244,7 +245,7 @@ func TestIdentityService_Enroll(t *testing.T) {
 		DeviceKey:    "AAAAAAAA",
 	}
 	req2 := datastore.DeviceEnrollRequest{
-		Brand:        "invalid",
+		Brand:        "auto-register-me",
 		Model:        "drone-1000",
 		SerialNumber: "DR1000A111",
 		StoreID:      "example-store",
@@ -274,7 +275,7 @@ func TestIdentityService_Enroll(t *testing.T) {
 		wantErr bool
 	}{
 		{"valid", args{req1}, false},
-		{"invalid", args{req2}, true},
+		{"auto-register", args{req2}, false},
 		{"enrolled", args{req3}, true},
 		{"empty", args{req4}, true},
 	}
@@ -293,6 +294,10 @@ func TestIdentityService_Enroll(t *testing.T) {
 				}
 				if len(got.Device.DeviceKey) == 0 {
 					t.Error("IdentityService.Enroll() = device key is not populated")
+				}
+				_, dErr := id.DB.DeviceGet(tt.args.req.Brand, tt.args.req.Model, tt.args.req.SerialNumber)
+				if dErr != nil {
+					t.Error("error getting device for registration:", err)
 				}
 			}
 		})

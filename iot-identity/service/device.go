@@ -20,7 +20,11 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
+
 	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-identity/models"
 
@@ -67,8 +71,15 @@ func (id IdentityService) RegisterDevice(req *RegisterDeviceRequest) (string, er
 	}
 
 	// Check that the device has not been registered
-	if _, err = id.DB.DeviceGet(req.Brand, req.Model, req.SerialNumber); err == nil {
-		return "", fmt.Errorf("the device `%s/%s/%s` is already registered", req.Brand, req.Model, req.SerialNumber)
+	device, err := id.DB.DeviceGet(req.Brand, req.Model, req.SerialNumber)
+	switch {
+	case err == nil:
+		Logger.Infof("returning existing registration for %s/%s/%s: %s", req.Brand, req.Model, req.SerialNumber, device.ID)
+		return device.ID, nil
+	case errors.Is(err, sql.ErrNoRows):
+		// We'll create a new device in this case below
+	case err != nil:
+		return "", fmt.Errorf("getting registration for `%s/%s/%s`: %w", req.Brand, req.Model, req.SerialNumber, err)
 	}
 
 	rootCertsDir := viper.GetString(keys.GetIdentityKey(keys.CertificatesPath))
@@ -79,6 +90,8 @@ func (id IdentityService) RegisterDevice(req *RegisterDeviceRequest) (string, er
 	if err != nil {
 		return "", err
 	}
+
+	logrus.Infof("created new device ID for %s/%s/%s: %s", req.Brand, req.Model, req.SerialNumber, deviceID)
 
 	MQTTURL := viper.GetString(configkey.MQTTHostAddress)
 	MQTTPort := viper.GetString(configkey.MQTTHostPort)
