@@ -69,6 +69,12 @@ func NewIdentityService(db datastore.DataStore) *IdentityService {
 	}
 
 	allowedSignKeyIDs := viper.GetStringSlice(keys.ValidSHA384Keys)
+
+	err := viper.Unmarshal(&allowedSignKeyIDs)
+	if err != nil {
+		log.Error("Cannot unmarshal allowed signing keys, auto-registration will not work")
+	}
+
 	ids.allowedSignKeyPublicKeys = make(map[string]asserts.PublicKey)
 
 	for _, key := range allowedSignKeyIDs {

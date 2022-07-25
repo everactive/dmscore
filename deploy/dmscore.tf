@@ -249,6 +249,18 @@ resource "kubernetes_deployment" "dmscore" {
             value = local.identity_service_enroll_port
           }
           env {
+            name = "DMS_IDENTITY_AUTO_REGISTRATION_ENABLED"
+            value = local.identity_auto_registration_enabled
+          }
+          env {
+            name = "DMS_IDENTITY_DEFAULT_ORGANIZATION"
+            values = local.identity_default_organization
+          }
+          env {
+            name = "DMS_IDENTITY_ASSERTIONS_VALID_KEY_SIGNATURES"
+            values = local.identity_valid_key_signatures
+          }
+          env {
             name = "DMS_IDENTITY_DATABASE_CONNECTION_STRING"
             value_from {
               config_map_key_ref {

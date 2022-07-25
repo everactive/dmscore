@@ -78,3 +78,16 @@ variable "client_token_provider" {
 variable "auth_disabled" {
   type = bool
 }
+
+variable "identity_auto_registration_enabled" {
+  type = bool
+  default = true
+}
+
+variable "identity_default_organization" {
+  type = string
+}
+
+variable "identity_valid_key_signatures" {
+  type = string
+}
