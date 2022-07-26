@@ -155,14 +155,16 @@ func (id IdentityService) enroll(enroll *datastore.DeviceEnrollRequest, model as
 
 	if dev != nil && err == nil {
 		log.Tracef("Handling existing device: %s, status is: %d", dev.Device.SerialNumber, dev.Status)
-		switch {
-		case dev.Status == models.StatusWaiting:
+		switch dev.Status {
+		case models.StatusWaiting:
 			// this will result in the device being created before function returns
 			break
-		case dev.Status == models.StatusEnrolled:
+		case models.StatusEnrolled:
 			return nil, fmt.Errorf("`%s/%s/%s` is already enrolled", enroll.Brand, enroll.Model, enroll.SerialNumber)
-		case dev.Status == models.StatusDisabled:
+		case models.StatusDisabled:
 			return nil, fmt.Errorf("`%s/%s/%s` is disabled", enroll.Brand, enroll.Model, enroll.SerialNumber)
+		default:
+			return nil, fmt.Errorf("unexpected status for `%s/%s/%s` where status = %d", enroll.Brand, enroll.Model, enroll.SerialNumber, dev.Status)
 		}
 	} else {
 		log.Tracef("Not existing device, check if auto-registration is enabled and if so, try to register")
