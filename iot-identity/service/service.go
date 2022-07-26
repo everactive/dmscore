@@ -70,9 +70,12 @@ func NewIdentityService(db datastore.DataStore) *IdentityService {
 
 	allowedSignKeyIDs := viper.GetStringSlice(keys.ValidSHA384Keys)
 
-	err := viper.Unmarshal(&allowedSignKeyIDs)
-	if err != nil {
-		log.Error("Cannot unmarshal allowed signing keys, auto-registration will not work")
+	if log.GetLevel() == log.TraceLevel || log.GetLevel() == log.InfoLevel {
+		log.Infof("Default organization: %s", viper.GetString(keys.DefaultOrganization))
+		log.Infof("Value for %s key: %s", keys.ValidSHA384Keys, allowedSignKeyIDs)
+		for _, k := range allowedSignKeyIDs {
+			log.Infof("Allowed sign key id: %s", k)
+		}
 	}
 
 	ids.allowedSignKeyPublicKeys = make(map[string]asserts.PublicKey)
@@ -140,14 +143,18 @@ func (id IdentityService) EnrollDevice(req *EnrollDeviceRequest) (*domain.Enroll
 func (id IdentityService) enroll(enroll *datastore.DeviceEnrollRequest, model asserts.Assertion, serial asserts.Assertion) (*domain.Enrollment, error) {
 	autoRegistrationEnabled := viper.GetBool(keys.AutoRegistrationEnabled)
 
+	log.Infof("Auto-registration is enabled = %t", autoRegistrationEnabled)
+
 	// Get the enrollment for the device, this will exist whether the device itself
 	// has enrolled or not, when a device is registered this is partially created with that info
 	dev, err := id.DB.DeviceGet(enroll.Brand, enroll.Model, enroll.SerialNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.Error("Trying to get device: ", err)
 		return nil, fmt.Errorf("getting device: %w", err)
 	}
 
-	if dev != nil {
+	if dev != nil && err == nil {
+		log.Tracef("Handling existing device: %s, status is: %d", dev.Device.SerialNumber, dev.Status)
 		switch {
 		case dev.Status == models.StatusWaiting:
 			// this will result in the device being created before function returns
@@ -158,11 +165,12 @@ func (id IdentityService) enroll(enroll *datastore.DeviceEnrollRequest, model as
 			return nil, fmt.Errorf("`%s/%s/%s` is disabled", enroll.Brand, enroll.Model, enroll.SerialNumber)
 		}
 	} else {
+		log.Tracef("Not existing device, check if auto-registration is enabled and if so, try to register")
 		if errors.Is(err, sql.ErrNoRows) && autoRegistrationEnabled {
-
+			log.Tracef("Checking device auto-registration eligibility")
 			canAutoRegister := id.checkAutoRegistrationEligibility(model, serial)
 			if !canAutoRegister {
-				return nil, fmt.Errorf("`%s/%s/%s` is not eligible for auto-registration", enroll.Brand, enroll.Model, enroll.SerialNumber)
+				return nil, fmt.Errorf("`%s/%s/%s` is not eligible for auto-registration and an existing registration was not found, please manually register this device", enroll.Brand, enroll.Model, enroll.SerialNumber)
 			}
 
 			// if we couldn't find the partial enrollment (registration data) AND
@@ -200,13 +208,16 @@ func (id IdentityService) checkAutoRegistrationEligibility(model asserts.Asserti
 	return isModelAssertionGood && isSerialAssertionGood
 }
 
-func (id IdentityService) checkKey(model asserts.Assertion) bool {
-	if pk, ok := id.allowedSignKeyPublicKeys[model.SignKeyID()]; ok {
-		err := asserts.SignatureCheck(model, pk)
+func (id IdentityService) checkKey(asrt asserts.Assertion) bool {
+	if pk, ok := id.allowedSignKeyPublicKeys[asrt.SignKeyID()]; ok {
+		err := asserts.SignatureCheck(asrt, pk)
 		if err != nil {
 			log.Error("Failed signature check: ", err)
 			return false
 		}
+	} else {
+		log.Tracef("This key is not allowed to auto-register, id = %s", asrt.SignKeyID())
+		return false
 	}
 
 	return true

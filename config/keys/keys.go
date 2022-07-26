@@ -55,12 +55,12 @@ const (
 	// ServiceHost is the service host name
 	ServiceHost = "service.host"
 	// AutoRegistrationEnabled determines whether devices will be registered when they try to enroll
-	AutoRegistrationEnabled = "identity.auto-registration.enabled"
+	AutoRegistrationEnabled = "identity.auto.registration.enabled"
 	// DefaultOrganization is default organization used by auto registration
 	DefaultOrganization = "identity.default.organization"
 	// ValidSHA384Keys is and array of the SHA384 of public keys that are acceptable to have signed model and serial
 	// assertions for auto-registration during enrollment
-	ValidSHA384Keys = "identity.assertions.valid-key-signatures"
+	ValidSHA384Keys = "identity.assertions.valid.key.signatures"
 )
 
 func GetIdentityKey(key string) string {

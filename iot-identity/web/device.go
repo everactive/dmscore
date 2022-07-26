@@ -129,6 +129,8 @@ func (wb IdentityService) EnrollDevice(c *gin.Context) {
 		return
 	}
 
+	log.Tracef("Model and serial asertions decoded")
+
 	req := service.EnrollDeviceRequest{}
 
 	if assertion1.Type().Name == asserts.ModelType.Name && assertion2.Type().Name == asserts.SerialType.Name {
@@ -142,6 +144,8 @@ func (wb IdentityService) EnrollDevice(c *gin.Context) {
 		log.Println("A model and serial assertion must be provided")
 	}
 
+	log.Tracef("Attempting to enroll device")
+	
 	en, err := wb.Identity.EnrollDevice(&req)
 	if err != nil {
 		log.Error("enrolling device: ", err)
