@@ -254,11 +254,11 @@ resource "kubernetes_deployment" "dmscore" {
           }
           env {
             name = "DMS_IDENTITY_DEFAULT_ORGANIZATION"
-            values = local.identity_default_organization
+            value = local.identity_default_organization
           }
           env {
             name = "DMS_IDENTITY_ASSERTIONS_VALID_KEY_SIGNATURES"
-            values = local.identity_valid_key_signatures
+            value = local.identity_valid_key_signatures
           }
           env {
             name = "DMS_IDENTITY_DATABASE_CONNECTION_STRING"
