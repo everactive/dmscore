@@ -20,7 +20,6 @@
 package web
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,91 +29,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/snapcore/snapd/asserts"
 )
-
-type devicesField struct {
-	ID     string
-	Serial string
-}
-
-// DeviceList fetches device registrations
-func (wb IdentityService) DeviceList(context *gin.Context) {
-	devices, err := wb.Identity.DeviceList(context.Param("orgid"))
-	if err != nil {
-		log.Error("fetching devices:", err)
-		formatStandardResponse("DeviceList", err.Error(), context.Writer)
-		return
-	}
-
-	devicesFields := []devicesField{}
-	for _, d := range devices {
-		devicesFields = append(devicesFields, devicesField{
-			ID:     d.ID,
-			Serial: d.Device.SerialNumber,
-		})
-	}
-	wb.logger.WithField("devices", devicesFields)
-
-	formatDevicesResponse(devices, context.Writer)
-}
-
-// DeviceGet fetches a device registration
-func (wb IdentityService) DeviceGet(context *gin.Context) {
-	en, err := wb.Identity.DeviceGet(context.Param("orgid"), context.Param("device"))
-	if err != nil {
-		log.Errorf("fetching device `%s`: %v", context.Param("device"), err)
-		formatStandardResponse("DeviceGet", err.Error(), context.Writer)
-		return
-	}
-	formatEnrollResponse(*en, context.Writer)
-}
-
-// DeviceUpdate updates a device registration
-func (wb IdentityService) DeviceUpdate(context *gin.Context) {
-	orgid := context.Param("orgid")
-	device := context.Param("device")
-	request := &service.DeviceUpdateRequest{}
-	err := decodeRequest(context.Writer, context.Request, request)
-	if err != nil {
-		return
-	}
-
-	err = wb.Identity.DeviceUpdate(orgid, device, request)
-	if err != nil {
-		log.Errorf("updating device `%s`: %v", device, err)
-		formatStandardResponse("DeviceUpdate", err.Error(), context.Writer)
-		return
-	}
-	formatStandardResponse("", "", context.Writer)
-}
-
-// DeleteDevice unregisters a new device with the identity service
-func (wb IdentityService) DeleteDevice(context *gin.Context) {
-	id, err := wb.Identity.DeleteDevice(context.Param("deviceid"))
-	if err != nil {
-		log.Error("deleting device: ", err)
-		formatStandardResponse("DeleteDevice", err.Error(), context.Writer)
-		return
-	}
-	formatRegisterResponse(id, context.Writer)
-}
-
-// RegisterDevice registers a new device with the identity service
-func (wb IdentityService) RegisterDevice(context *gin.Context) {
-	// Decode the JSON body
-	request := &service.RegisterDeviceRequest{}
-	err := decodeRequest(context.Writer, context.Request, request)
-	if err != nil {
-		return
-	}
-
-	id, err := wb.Identity.RegisterDevice(request)
-	if err != nil {
-		log.Error("registering device: ", err)
-		formatStandardResponse("RegDevice", err.Error(), context.Writer)
-		return
-	}
-	formatRegisterResponse(id, context.Writer)
-}
 
 // EnrollDevice connects an IoT device with the identity service
 func (wb IdentityService) EnrollDevice(c *gin.Context) {
@@ -145,7 +59,7 @@ func (wb IdentityService) EnrollDevice(c *gin.Context) {
 	}
 
 	log.Tracef("Attempting to enroll device")
-	
+
 	en, err := wb.Identity.EnrollDevice(&req)
 	if err != nil {
 		log.Error("enrolling device: ", err)
@@ -183,27 +97,4 @@ func decodeEnrollRequest(r *http.Request) (asserts.Assertion, asserts.Assertion,
 	}
 
 	return assertion1, assertion2, nil
-}
-
-func decodeRequest(w http.ResponseWriter, r *http.Request, i interface{}) error {
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			Logger.Error(err)
-		}
-	}(r.Body)
-
-	// Decode the JSON body
-	err := json.NewDecoder(r.Body).Decode(i)
-	switch {
-	// Check we have some data
-	case err == io.EOF:
-		formatStandardResponse("NoData", "No data supplied.", w)
-		log.Println("No data supplied.")
-		// Check for parsing errors
-	case err != nil:
-		formatStandardResponse("BadData", err.Error(), w)
-		log.Println(err)
-	}
-	return err
 }

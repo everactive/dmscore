@@ -28,11 +28,6 @@ select device_id, org_id, brand, model, serial_number, cred_key, cred_cert, cred
 from device
 where brand=$1 and model=$2 and serial_number=$3`
 
-const getDeviceByIDSQL = `
-select device_id, org_id, brand, model, serial_number, cred_key, cred_cert, cred_mqtt, cred_port, store_id, device_key, status, device_data
-from device
-where device_id=$1`
-
 const deleteDeviceByID = `
 delete from device where device_id=$1
 `

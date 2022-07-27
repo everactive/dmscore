@@ -22,25 +22,11 @@ package web
 
 import (
 	"github.com/everactive/dmscore/iot-identity/service"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 // Logger is a logger specific to the web package and can be swapped out
 var Logger = log.StandardLogger()
-
-// Web is the interface for the web API
-type Web interface {
-	Run() error
-	EnrollRouter(engine *gin.Engine)
-	RegisterOrganization(w http.ResponseWriter, r *http.Request)
-	RegisterDevice(w http.ResponseWriter, r *http.Request)
-	OrganizationList(w http.ResponseWriter, r *http.Request)
-	DeviceList(w http.ResponseWriter, r *http.Request)
-
-	EnrollDevice(w http.ResponseWriter, r *http.Request)
-}
 
 // IdentityService is the implementation of the web API
 type IdentityService struct {

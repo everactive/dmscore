@@ -49,7 +49,7 @@ func TestService_User(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
-			if err := srv.User(tt.args.orgID, tt.args.clientID, &tt.args.user); (err != nil) != tt.wantErr {
+			if err := srv.User(tt.args.orgID, tt.args.clientID, tt.args.user); (err != nil) != tt.wantErr {
 				t.Errorf("Service.User() test: error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

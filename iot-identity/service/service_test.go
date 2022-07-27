@@ -20,6 +20,7 @@
 package service
 
 import (
+	"github.com/everactive/dmscore/config/keys"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-identity/config/configkey"
@@ -133,7 +134,13 @@ const ignoreError1 = "the device `canonical/canonical/d75f7300-abbf-4c11-bf0a-8b
 
 func TestIdentityService_RegisterOrganization(t *testing.T) {
 	viper.Set(configkey.MQTTCertificatePath, "../datastore/test_data")
-
+	viper.Set(keys.GetIdentityKey(keys.CertificatesPath), "../../testing/certs")
+	checkSignature = func(assert asserts.Assertion, pubKey asserts.PublicKey) error {
+		return nil
+	}
+	isKeyAllowed = func(signKeyID string, allowedKeys map[string]asserts.PublicKey) (asserts.PublicKey, bool) {
+		return nil, true
+	}
 	db := memory.NewStore()
 	req1 := RegisterOrganizationRequest{
 		Name:        "Example PLC",
@@ -176,6 +183,13 @@ func TestIdentityService_RegisterOrganization(t *testing.T) {
 
 func TestIdentityService_RegisterDevice(t *testing.T) {
 	viper.Set(configkey.MQTTCertificatePath, "../datastore/test_data")
+	viper.Set(keys.GetIdentityKey(keys.CertificatesPath), "../../testing/certs")
+	checkSignature = func(assert asserts.Assertion, pubKey asserts.PublicKey) error {
+		return nil
+	}
+	isKeyAllowed = func(signKeyID string, allowedKeys map[string]asserts.PublicKey) (asserts.PublicKey, bool) {
+		return nil, true
+	}
 
 	db := memory.NewStore()
 	req1 := RegisterDeviceRequest{
@@ -235,7 +249,11 @@ func TestIdentityService_RegisterDevice(t *testing.T) {
 
 func TestIdentityService_Enroll(t *testing.T) {
 	viper.Set(configkey.MQTTCertificatePath, "../datastore/test_data")
-	viper.Set(configkey.DefaultOrganization, "Example Inc")
+	viper.Set(keys.DefaultOrganization, "Example Inc")
+
+	serial1Assertion, _ := asserts.Decode([]byte(serial1))
+	model3Assertion, _ := asserts.Decode([]byte(model3))
+
 	db := memory.NewStore()
 	req1 := datastore.DeviceEnrollRequest{
 		Brand:        "canonical",
@@ -267,22 +285,38 @@ func TestIdentityService_Enroll(t *testing.T) {
 	}
 
 	type args struct {
-		req datastore.DeviceEnrollRequest
+		req                     datastore.DeviceEnrollRequest
+		model                   asserts.Assertion
+		serial                  asserts.Assertion
+		autoRegistrationEnabled bool
+		allowedKeys             []string
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"valid", args{req1}, false},
-		{"auto-register", args{req2}, false},
-		{"enrolled", args{req3}, true},
-		{"empty", args{req4}, true},
+		{"valid", args{req1, model3Assertion, serial1Assertion, false, []string{}}, false},
+		{"auto-register", args{req2, model3Assertion, serial1Assertion, true, []string{"BWDEoaqyr25nF5SNCvEv2v7QnM9QsfCc0PBMYD_i2NGSQ32EF2d4D0hqUel3m8ul", "9tydnLa6MTJ-jaQTFUXEwHl1yRx7ZS4K5cyFDhYDcPzhS7uyEkDxdUjg9g08BtNn"}}, false},
+		{"enrolled", args{req3, model3Assertion, serial1Assertion, false, []string{}}, true},
+		{"empty", args{req4, model3Assertion, serial1Assertion, false, []string{}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			viper.Set(keys.AutoRegistrationEnabled, tt.args.autoRegistrationEnabled)
+			viper.Set(keys.GetIdentityKey(keys.CertificatesPath), "../../testing/certs")
+
 			id := NewIdentityService(db)
-			got, err := id.enroll(&tt.args.req)
+			id.allowedSignKeyIDs = tt.args.allowedKeys
+			checkSignature = func(assert asserts.Assertion, pubKey asserts.PublicKey) error {
+				return nil
+			}
+			isKeyAllowed = func(signKeyID string, allowedKeys map[string]asserts.PublicKey) (asserts.PublicKey, bool) {
+				return nil, true
+			}
+
+			got, err := id.enroll(&tt.args.req, tt.args.model, tt.args.serial)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IdentityService.Enroll() error = %v, wantErr %v", err, tt.wantErr)
 				return

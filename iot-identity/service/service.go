@@ -86,19 +86,19 @@ func NewIdentityService(db datastore.DataStore) *IdentityService {
 		req.SetHeader("Accept", "application/x.ubuntu.assertion")
 		resp, err := req.Get(AccountKeyGetURL + key)
 		if err != nil {
-			log.Error("Cannot retrieve account key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
+			log.Errorf("Cannot retrieve account key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
 			break
 		}
 
 		accountKeyAssertion, err := asserts.Decode(resp.Body())
 		if err != nil {
-			log.Error("Cannot decode account key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
+			log.Errorf("Cannot decode account key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
 			break
 		}
 
 		pubKey, err := asserts.DecodePublicKey(accountKeyAssertion.Body())
 		if err != nil {
-			log.Error("Cannot decode public key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
+			log.Errorf("Cannot decode public key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
 			break
 		}
 
@@ -210,9 +210,24 @@ func (id IdentityService) checkAutoRegistrationEligibility(model asserts.Asserti
 	return isModelAssertionGood && isSerialAssertionGood
 }
 
+var isKeyAllowed = isSignKeyAllowed
+var checkSignature = signatureCheck
+
+func signatureCheck(assert asserts.Assertion, pubKey asserts.PublicKey) error {
+	return asserts.SignatureCheck(assert, pubKey)
+}
+
+func isSignKeyAllowed(signKeyID string, allowedKeys map[string]asserts.PublicKey) (asserts.PublicKey, bool) {
+	if pk, ok := allowedKeys[signKeyID]; ok {
+		return pk, true
+	}
+
+	return nil, false
+}
+
 func (id IdentityService) checkKey(asrt asserts.Assertion) bool {
-	if pk, ok := id.allowedSignKeyPublicKeys[asrt.SignKeyID()]; ok {
-		err := asserts.SignatureCheck(asrt, pk)
+	if pk, ok := isKeyAllowed(asrt.SignKeyID(), id.allowedSignKeyPublicKeys); ok {
+		err := checkSignature(asrt, pk)
 		if err != nil {
 			log.Error("Failed signature check: ", err)
 			return false

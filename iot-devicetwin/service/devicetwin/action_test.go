@@ -42,7 +42,7 @@ func TestService_ActionList(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore())
+			srv := NewService(memory.NewStore(), memory.NewStore())
 			got, err := srv.ActionList(localtt.args.orgID, localtt.args.deviceID)
 			if (err != nil) != localtt.wantErr {
 				t.Errorf("ActionList() error = %v, wantErr %v", err, localtt.wantErr)
