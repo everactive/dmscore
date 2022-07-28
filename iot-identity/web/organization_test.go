@@ -20,7 +20,6 @@
 package web
 
 import (
-	log "github.com/sirupsen/logrus"
 	"testing"
 )
 
@@ -76,7 +75,7 @@ func TestIdentityService_OrganizationList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			wb := NewIdentityService(&mockIdentity{tt.withErr}, log.StandardLogger())
+			//wb := NewIdentityService(&mockIdentity{tt.withErr}, log.StandardLogger())
 			//
 			//w := sendRequest("GET", "/v1/organizations", nil, wb)
 			//if w.Code != tt.code {

@@ -36,6 +36,12 @@ func (srv *Service) DeviceSnaps(orgID, clientID string) ([]messages.DeviceSnap, 
 		return nil, err
 	}
 
+	// Validate the supplied orgid
+	if device.OrganisationID != orgID {
+		logrus.Error("the organization ID does not match the device")
+		return nil, fmt.Errorf("the organization ID does not match the device")
+	}
+
 	snaps, err := srv.DB.DeviceSnapList(int64(device.ID))
 	if err != nil {
 		return nil, err

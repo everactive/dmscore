@@ -21,34 +21,37 @@ package web
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/everactive/dmscore/iot-identity/web"
+	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
 	"net/http"
 	"testing"
-
-	"github.com/everactive/dmscore/iot-management/config/configkey"
-	"github.com/spf13/viper"
-
-	"github.com/everactive/dmscore/iot-management/datastore/memory"
-	"github.com/everactive/dmscore/iot-management/service/manage"
 )
 
 func TestService_RegDeviceList(t *testing.T) {
 	tests := []struct {
 		name        string
+		orgID       string
 		url         string
 		username    string
 		permissions int
 		want        int
 		wantErr     string
 	}{
-		{"valid", "/v1/abc/register/devices", "jamesj", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/abc/register/devices", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"valid", "abc", "/v1/%s/register/devices", "jamesj", 300, http.StatusOK, ""},
+		{"invalid-permissions", "abc", "/v1/%s/register/devices", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := memory.NewStore()
-			wb := NewService(manage.NewMockManagement(db))
-			jwtSecret := viper.GetString(configkey.JwtSecret)
-			w := sendRequest("GET", tt.url, nil, wb, tt.username, jwtSecret, tt.permissions)
+
+			jwtSecret := createAndSetJWTSecret(t)
+
+			manageMock := &mocks.Manage{}
+			wb := NewService(manageMock)
+
+			manageMock.On("RegDeviceList", tt.orgID, tt.username, tt.permissions).Return(web.DevicesResponse{})
+
+			w := sendRequest("GET", fmt.Sprintf(tt.url, tt.orgID), nil, wb, tt.username, jwtSecret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -67,22 +70,35 @@ func TestService_RegDeviceList(t *testing.T) {
 func TestService_RegDeviceGet(t *testing.T) {
 	tests := []struct {
 		name        string
+		orgID       string
+		deviceID    string
 		url         string
 		username    string
 		permissions int
 		want        int
 		wantErr     string
 	}{
-		{"valid", "/v1/abc/register/devices/a111", "jamesj", 300, http.StatusOK, ""},
-		{"invalid-org", "/v1/abc/register/devices/invalid", "jamesj", 300, http.StatusBadRequest, "RegDeviceAuth"},
-		{"invalid-permissions", "/v1/abc/register/devices/a111", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"valid", "abc", "a111", "/v1/%s/register/devices/%s", "jamesj", 300, http.StatusOK, ""},
+		{"invalid-org", "abc", "invalid", "/v1/%s/register/devices/%s", "jamesj", 300, http.StatusBadRequest, "RegDeviceAuth"},
+		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := memory.NewStore()
-			wb := NewService(manage.NewMockManagement(db))
-			jwtSecret := viper.GetString(configkey.JwtSecret)
-			w := sendRequest("GET", tt.url, nil, wb, tt.username, jwtSecret, tt.permissions)
+
+			jwtSecret := createAndSetJWTSecret(t)
+
+			manageMock := &mocks.Manage{}
+			wb := NewService(manageMock)
+
+			if tt.wantErr == "" {
+				manageMock.On("RegDeviceGet", tt.orgID, tt.username, tt.permissions, tt.deviceID).Return(web.EnrollResponse{})
+			} else {
+				manageMock.On("RegDeviceGet", tt.orgID, tt.username, tt.permissions, tt.deviceID).Return(web.EnrollResponse{
+					StandardResponse: web.StandardResponse{Code: tt.wantErr},
+				})
+			}
+
+			w := sendRequest("GET", fmt.Sprintf(tt.url, tt.orgID, tt.deviceID), nil, wb, tt.username, jwtSecret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -102,6 +118,7 @@ func TestService_RegisterDevice(t *testing.T) {
 	d1 := []byte(`{"orgid":"abc", "brand":"deviceinc", "model":"A1000", "serial":"d1234"}`)
 	tests := []struct {
 		name        string
+		orgID       string
 		url         string
 		data        []byte
 		username    string
@@ -109,17 +126,30 @@ func TestService_RegisterDevice(t *testing.T) {
 		want        int
 		wantErr     string
 	}{
-		{"valid", "/v1/abc/register/devices", d1, "jamesj", 300, http.StatusOK, ""},
-		{"invalid-org", "/v1/bbb/register/devices", d1, "jamesj", 300, http.StatusBadRequest, "RegDevice"},
-		{"invalid-permissions", "/v1/abc/register/devices", d1, "jamesj", 0, http.StatusBadRequest, "UserAuth"},
-		{"invalid-data", "/v1/abc/register/devices", []byte(`\u1000`), "jamesj", 300, http.StatusBadRequest, "RegDevice"},
+		{"valid", "abc", "/v1/%s/register/devices", d1, "jamesj", 300, http.StatusOK, ""},
+		{"invalid-org", "bbb", "/v1/%s/register/devices", d1, "jamesj", 300, http.StatusBadRequest, "RegDevice"},
+		{"invalid-permissions", "abc", "/v1/%s/register/devices", d1, "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-data", "abc", "/v1/%s/register/devices", []byte(`\u1000`), "jamesj", 300, http.StatusBadRequest, "RegDevice"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := memory.NewStore()
-			wb := NewService(manage.NewMockManagement(db))
-			jwtSecret := viper.GetString(configkey.JwtSecret)
-			w := sendRequest("POST", tt.url, bytes.NewReader(tt.data), wb, tt.username, jwtSecret, tt.permissions)
+
+			jwtSecret := createAndSetJWTSecret(t)
+
+			manageMock := &mocks.Manage{}
+			wb := NewService(manageMock)
+
+			if tt.wantErr == "" {
+				manageMock.On("RegisterDevice", tt.orgID, tt.username, tt.permissions, tt.data).Return(web.RegisterResponse{})
+			} else {
+				manageMock.On("RegisterDevice", tt.orgID, tt.username, tt.permissions, tt.data).Return(web.RegisterResponse{
+					StandardResponse: web.StandardResponse{
+						Code: tt.wantErr,
+					},
+				})
+			}
+
+			w := sendRequest("POST", fmt.Sprintf(tt.url, tt.orgID), bytes.NewReader(tt.data), wb, tt.username, jwtSecret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -139,6 +169,8 @@ func TestService_RegDeviceUpdate(t *testing.T) {
 	d1 := []byte(`{"status":3}`)
 	tests := []struct {
 		name        string
+		orgID       string
+		deviceID    string
 		url         string
 		data        []byte
 		username    string
@@ -146,16 +178,22 @@ func TestService_RegDeviceUpdate(t *testing.T) {
 		want        int
 		wantErr     string
 	}{
-		{"valid", "/v1/abc/register/devices/a111", d1, "jamesj", 300, http.StatusOK, ""},
-		{"invalid-device", "/v1/abc/register/devices/invalid", d1, "jamesj", 300, http.StatusBadRequest, "RegDeviceUpdate"},
-		{"invalid-permissions", "/v1/abc/register/devices/a111", d1, "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"valid", "abc", "a111", "/v1/%s/register/devices/%s", d1, "jamesj", 300, http.StatusOK, ""},
+		{"invalid-device", "abc", "invalid", "/v1/%s/register/devices/%s", d1, "jamesj", 300, http.StatusBadRequest, "RegDeviceUpdate"},
+		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s", d1, "jamesj", 0, http.StatusBadRequest, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := memory.NewStore()
-			wb := NewService(manage.NewMockManagement(db))
-			jwtSecret := viper.GetString(configkey.JwtSecret)
-			w := sendRequest("PUT", tt.url, bytes.NewReader(tt.data), wb, tt.username, jwtSecret, tt.permissions)
+
+			jwtSecret := createAndSetJWTSecret(t)
+
+			manageMock := &mocks.Manage{}
+			wb := NewService(manageMock)
+
+			response := web.StandardResponse{Code: tt.wantErr}
+			manageMock.On("RegDeviceUpdate", tt.orgID, tt.username, tt.permissions, tt.deviceID, tt.data).Return(response)
+
+			w := sendRequest("PUT", fmt.Sprintf(tt.url, tt.orgID, tt.deviceID), bytes.NewReader(tt.data), wb, tt.username, jwtSecret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -174,22 +212,32 @@ func TestService_RegDeviceUpdate(t *testing.T) {
 func TestService_RegDeviceGetDownload(t *testing.T) {
 	tests := []struct {
 		name        string
+		orgID       string
+		deviceID    string
 		url         string
 		username    string
 		permissions int
 		want        int
 		wantErr     string
 	}{
-		{"valid", "/v1/abc/register/devices/a111/download", "jamesj", 300, http.StatusOK, ""},
-		{"invalid-org", "/v1/abc/register/devices/invalid/download", "jamesj", 300, http.StatusBadRequest, "RegDeviceAuth"},
-		{"invalid-permissions", "/v1/abc/register/devices/a111/download", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"valid", "abc", "a111", "/v1/%s/register/devices/%s/download", "jamesj", 300, http.StatusOK, ""},
+		{"invalid-org", "abc", "invalid", "/v1/%s/register/devices/%s/download", "jamesj", 300, http.StatusBadRequest, "RegDeviceAuth"},
+		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s/download", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := memory.NewStore()
-			wb := NewService(manage.NewMockManagement(db))
-			jwtSecret := viper.GetString(configkey.JwtSecret)
-			w := sendRequest("GET", tt.url, nil, wb, tt.username, jwtSecret, tt.permissions)
+
+			jwtSecret := createAndSetJWTSecret(t)
+
+			manageMock := &mocks.Manage{}
+			wb := NewService(manageMock)
+
+			response := web.EnrollResponse{
+				StandardResponse: web.StandardResponse{Code: tt.wantErr},
+			}
+			manageMock.On("RegDeviceGet", tt.orgID, tt.username, tt.permissions, tt.deviceID).Return(response)
+
+			w := sendRequest("GET", fmt.Sprintf(tt.url, tt.orgID, tt.deviceID), nil, wb, tt.username, jwtSecret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}

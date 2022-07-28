@@ -90,7 +90,7 @@ var runCommand = cobra.Command{
 		dts := createDeviceTwinService(db)
 
 		// Create the main services
-		srv := manage.NewManagement(db, twinAPI, identityAPI, dts, ids)
+		srv := manage.NewManagement(db, twinAPI, identityAPI, dts.Controller, ids.Identity)
 
 		// Figure out what our auth provider is (keycloak or legacy static client token)
 		authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))

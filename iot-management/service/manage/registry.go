@@ -37,7 +37,7 @@ func (srv *Management) RegDeviceList(orgID, username string, role int) web.Devic
 		}
 	}
 
-	list, err := srv.IdentityService.Identity.DeviceList(orgID)
+	list, err := srv.Identity.DeviceList(orgID)
 	if err != nil {
 		return web.DevicesResponse{
 			StandardResponse: web.StandardResponse{
@@ -75,7 +75,7 @@ func (srv *Management) RegisterDevice(orgID, username string, role int, body []b
 		}
 	}
 
-	device, err := srv.IdentityService.Identity.RegisterDevice(&request)
+	device, err := srv.Identity.RegisterDevice(&request)
 	if err != nil {
 		return web.RegisterResponse{
 			StandardResponse: web.StandardResponse{
@@ -103,7 +103,7 @@ func (srv *Management) RegDeviceGet(orgID, username string, role int, deviceID s
 	}
 
 	// return srv.IdentityAPI.RegDeviceGet(orgID, deviceID)
-	enrollment, err := srv.IdentityService.Identity.DeviceGet(orgID, deviceID)
+	enrollment, err := srv.Identity.DeviceGet(orgID, deviceID)
 	if err != nil {
 		return web.EnrollResponse{
 			StandardResponse: web.StandardResponse{
@@ -137,7 +137,7 @@ func (srv *Management) RegDeviceUpdate(orgID, username string, role int, deviceI
 		}
 	}
 
-	err = srv.IdentityService.Identity.DeviceUpdate(orgID, deviceID, &request)
+	err = srv.Identity.DeviceUpdate(orgID, deviceID, &request)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "RegDeviceUpdate",

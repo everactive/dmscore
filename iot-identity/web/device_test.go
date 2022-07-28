@@ -22,6 +22,9 @@ package web
 import (
 	"bytes"
 	"fmt"
+	"github.com/everactive/dmscore/iot-identity/domain"
+	"github.com/everactive/dmscore/iot-identity/service/mocks"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -110,7 +113,9 @@ func TestIdentityService_EnrollDevice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			wb := NewIdentityService(&mockIdentity{}, log.StandardLogger())
+			identityMock := &mocks.Identity{}
+			identityMock.On("EnrollDevice", mock.Anything).Return(&domain.Enrollment{}, nil)
+			wb := NewIdentityService(identityMock, log.StandardLogger())
 			w := sendEnrollRequest("POST", "/v1/device/enroll", bytes.NewReader(tt.args.req), wb)
 			if w.Code != tt.code {
 				t.Errorf("Web.EnrollDevice() got = %v, want %v", w.Code, tt.code)

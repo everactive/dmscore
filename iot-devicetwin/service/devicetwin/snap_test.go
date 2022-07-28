@@ -20,6 +20,7 @@
 package devicetwin
 
 import (
+	"github.com/everactive/dmscore/iot-management/datastore/mocks"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore/memory"
@@ -43,7 +44,7 @@ func TestService_DeviceSnaps(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore())
+			srv := NewService(memory.NewStore(), &mocks.DataStore{})
 			got, err := srv.DeviceSnaps(localtt.args.orgID, localtt.args.clientID)
 			if (err != nil) != localtt.wantErr {
 				t.Errorf("Service.DeviceSnaps() error = %v, wantErr %v", err, localtt.wantErr)
