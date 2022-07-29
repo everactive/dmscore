@@ -236,33 +236,6 @@ func TestStore_OrganizationList(t *testing.T) {
 	}
 }
 
-func TestStore_DeviceGetByID(t *testing.T) {
-	tests := []struct {
-		name     string
-		deviceID string
-		wantErr  bool
-	}{
-		{"valid", "a111", false},
-		{"invalid", "invalid", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mem := NewStore()
-			got, err := mem.DeviceGetByID(tt.deviceID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Store.DeviceGetByID() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				return
-			}
-			if got != nil && got.ID != tt.deviceID {
-				t.Errorf("Store.DeviceGetByID() = %v, want %v", got.ID, tt.deviceID)
-			}
-		})
-	}
-}
-
 func TestStore_DeviceUpdate(t *testing.T) {
 	type args struct {
 		deviceID string

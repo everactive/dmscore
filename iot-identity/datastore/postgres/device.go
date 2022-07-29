@@ -33,7 +33,7 @@ func (s *Store) DeviceNew(d datastore.DeviceNewRequest) (string, error) {
 
 	err := s.QueryRow(createDeviceSQL, deviceID, d.OrganizationID, d.Brand, d.Model, d.SerialNumber, d.Credentials.PrivateKey, d.Credentials.Certificate, d.Credentials.MQTTURL, d.Credentials.MQTTPort, d.DeviceData).Scan(&id)
 	if err != nil {
-		datastore.Logger.Errorf("Error creating device: %v\n", err)
+		datastore.Logger.Error("Error creating device: ", err)
 	}
 
 	return deviceID, err
@@ -44,8 +44,8 @@ func (s *Store) DeviceDelete(deviceID string) (string, error) {
 	datastore.Logger.Tracef("Deleting device: %s", deviceID)
 	_, err := s.Exec(deleteDeviceByID, deviceID)
 	if err != nil {
-		datastore.Logger.Errorf("Error deleting device: %v\n", err)
-		return deviceID, fmt.Errorf("error deleting device: %v", err)
+		datastore.Logger.Error("Error deleting device: ", err)
+		return deviceID, fmt.Errorf("error deleting device: %w", err)
 	}
 
 	return deviceID, nil
@@ -64,15 +64,15 @@ func (s *Store) DeviceGet(brand, model, serial string) (*domain.Enrollment, erro
 		&d.Credentials.PrivateKey, &d.Credentials.Certificate, &d.Credentials.MQTTURL, &d.Credentials.MQTTPort,
 		&d.Device.StoreID, &d.Device.DeviceKey, &d.Status, &d.DeviceData)
 	if err != nil {
-		datastore.Logger.Errorf("Error retrieving device: %v\n", err)
-		return &d, fmt.Errorf("error retrieving device: %v", err)
+		datastore.Logger.Error("Error retrieving device:", err)
+		return &d, fmt.Errorf("error retrieving device: %w", err)
 	}
 
 	// Get the organization details for the device
 	org, err := s.OrganizationGet(d.Organization.ID)
 	if err != nil {
-		datastore.Logger.Errorf("Error retrieving device organization: %v\n", err)
-		return &d, fmt.Errorf("error retrieving device organization: %v", err)
+		datastore.Logger.Error("Error retrieving device organization:", err)
+		return &d, fmt.Errorf("error retrieving device organization: %w", err)
 	}
 	d.Organization = *org
 
@@ -98,8 +98,8 @@ func (s *Store) DeviceGetEnrollmentByID(deviceID string) (*domain.Enrollment, er
 	// Get the organization details for the device
 	org, err := s.OrganizationGet(d.Organization.ID)
 	if err != nil {
-		datastore.Logger.Errorf("Error retrieving device organization: %v\n", err)
-		return &d, fmt.Errorf("error retrieving device organization: %v", err)
+		datastore.Logger.Error("Error retrieving device organization:", err)
+		return &d, fmt.Errorf("error retrieving device organization: %w", err)
 	}
 	d.Organization = *org
 
@@ -110,7 +110,7 @@ func (s *Store) DeviceGetEnrollmentByID(deviceID string) (*domain.Enrollment, er
 func (s *Store) DeviceEnroll(d datastore.DeviceEnrollRequest) (*domain.Enrollment, error) {
 	_, err := s.Exec(enrollDeviceSQL, d.Brand, d.Model, d.SerialNumber, d.StoreID, d.DeviceKey, models.StatusEnrolled)
 	if err != nil {
-		datastore.Logger.Errorf("Error updating the device: %v\n", err)
+		datastore.Logger.Error("Error updating the device:", err)
 	}
 
 	return s.DeviceGet(d.Brand, d.Model, d.SerialNumber)

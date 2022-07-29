@@ -33,6 +33,23 @@ import (
 	"github.com/juju/usso/openid"
 )
 
+func sendRequestWithBeforeServeHook(method, url string, data io.Reader, srv *Service, beforeServeHook func(*http.Request) error) *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(method, url, data)
+
+	r := gin.Default()
+
+	srv.router(r)
+
+	if err := beforeServeHook(req); err != nil {
+		panic(err)
+	}
+
+	r.ServeHTTP(w, req)
+
+	return w
+}
+
 func sendRequest(method, url string, data io.Reader, srv *Service, username, jwtSecret string, permissions int) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(method, url, data)

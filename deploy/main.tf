@@ -26,4 +26,7 @@ locals {
   client_token_provider                        = var.client_token_provider
   auth_disabled                                = var.auth_disabled
   identity_service_enroll_port                 = 8040
+  identity_auto_registration_enabled = var.identity_auto_registration_enabled
+  identity_default_organization = var.identity_default_organization
+  identity_valid_key_signatures = var.identity_valid_key_signatures
 }

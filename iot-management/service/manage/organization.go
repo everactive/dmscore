@@ -62,7 +62,7 @@ func (srv *Management) OrganizationGet(orgID string) (domain.Organization, error
 
 // OrganizationCreate creates a new organization
 func (srv *Management) OrganizationCreate(org domain.OrganizationCreate) error {
-	organizationID, err := srv.IdentityService.Identity.RegisterOrganization(&service.RegisterOrganizationRequest{
+	organizationID, err := srv.Identity.RegisterOrganization(&service.RegisterOrganizationRequest{
 		Name:        org.Name,
 		CountryName: org.Country,
 	})

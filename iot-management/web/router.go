@@ -80,6 +80,7 @@ func (wb Service) addAPI(apiRouter *gin.RouterGroup) {
 
 	//// API routes: snap functionality
 	apiRouter.GET("/device/:orgid/:deviceid/snaps", wb.SnapListHandler)
+
 	apiRouter.POST("/snaps/:orgid/:deviceid/list", wb.SnapListOnDevice)
 	apiRouter.POST("/snaps/:orgid/:deviceid/:snap", wb.SnapInstallHandler)
 	apiRouter.DELETE("/snaps/:orgid/:deviceid/:snap", wb.SnapDeleteHandler)

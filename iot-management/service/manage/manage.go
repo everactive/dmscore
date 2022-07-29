@@ -22,8 +22,9 @@ package manage
 
 import (
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
+	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
-	devicetwinweb "github.com/everactive/dmscore/iot-devicetwin/web"
+	"github.com/everactive/dmscore/iot-identity/service"
 	idweb "github.com/everactive/dmscore/iot-identity/web"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/domain"
@@ -78,20 +79,20 @@ type Manage interface {
 
 // Management implementation of the management service use cases
 type Management struct {
-	DB                datastore.DataStore
-	TwinAPI           twinapi.Client
-	IdentityAPI       identityapi.Client
-	DeviceTwinService *devicetwinweb.Service
-	IdentityService   *idweb.IdentityService
+	DB                   datastore.DataStore
+	TwinAPI              twinapi.Client
+	IdentityAPI          identityapi.Client
+	DeviceTwinController controller.Controller
+	Identity             service.Identity
 }
 
 // NewManagement creates an implementation of the management use cases
-func NewManagement(db datastore.DataStore, api twinapi.Client, id identityapi.Client, dts *devicetwinweb.Service, ids *idweb.IdentityService) *Management {
+func NewManagement(db datastore.DataStore, api twinapi.Client, id identityapi.Client, dtc controller.Controller, ids service.Identity) *Management {
 	return &Management{
-		DB:                db,
-		TwinAPI:           api,
-		IdentityAPI:       id,
-		DeviceTwinService: dts,
-		IdentityService:   ids,
+		DB:                   db,
+		TwinAPI:              api,
+		IdentityAPI:          id,
+		DeviceTwinController: dtc,
+		Identity:             ids,
 	}
 }

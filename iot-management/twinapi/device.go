@@ -23,8 +23,6 @@ import (
 	"encoding/json"
 	"path"
 
-	"github.com/go-resty/resty/v2"
-
 	"github.com/everactive/dmscore/iot-devicetwin/web"
 )
 
@@ -118,49 +116,49 @@ type DeviceUser struct {
 	Username     string `json:"username,omitempty"`
 }
 
-// DeviceUsersAction sends a user action to a device and decodes it into a StandardResponse
-func (a *ClientAdapter) DeviceUsersAction(orgID, deviceID string, deviceUser DeviceUser) web.StandardResponse {
-	r := web.StandardResponse{}
-	p := path.Join("device", orgID, deviceID, "users")
-	var err error
-	var resp *resty.Response
-
-	if err != nil {
-		r.Code = deviceUserLiteral
-		r.Message = err.Error()
-		return r
-	}
-
-	bytes, err := json.Marshal(&deviceUser)
-	if err != nil {
-		r.Code = deviceUserLiteral
-		r.Message = err.Error()
-		return r
-	}
-
-	switch deviceUser.Action {
-	case "create":
-		resp, err = a.post(a.urlPath(p), bytes)
-		if err != nil {
-			r.Code = deviceUserLiteral
-			r.Message = err.Error()
-			return r
-		}
-	case "remove":
-		resp, err = a.deleteWithBody(a.urlPath(p), bytes)
-		if err != nil {
-			r.Code = "DeviceUser"
-			r.Message = err.Error()
-			return r
-		}
-	}
-
-	err = json.Unmarshal(resp.Body(), &r)
-	if err != nil {
-		r.Code = "DeviceUser"
-		r.Message = err.Error()
-		return r
-	}
-
-	return r
-}
+//// DeviceUsersAction sends a user action to a device and decodes it into a StandardResponse
+//func (a *ClientAdapter) DeviceUsersAction(orgID, deviceID string, deviceUser DeviceUser) web.StandardResponse {
+//	r := web.StandardResponse{}
+//	p := path.Join("device", orgID, deviceID, "users")
+//	var err error
+//	var resp *resty.Response
+//
+//	if err != nil {
+//		r.Code = deviceUserLiteral
+//		r.Message = err.Error()
+//		return r
+//	}
+//
+//	bytes, err := json.Marshal(&deviceUser)
+//	if err != nil {
+//		r.Code = deviceUserLiteral
+//		r.Message = err.Error()
+//		return r
+//	}
+//
+//	switch deviceUser.Action {
+//	case "create":
+//		resp, err = a.post(a.urlPath(p), bytes)
+//		if err != nil {
+//			r.Code = deviceUserLiteral
+//			r.Message = err.Error()
+//			return r
+//		}
+//	case "remove":
+//		resp, err = a.deleteWithBody(a.urlPath(p), bytes)
+//		if err != nil {
+//			r.Code = "DeviceUser"
+//			r.Message = err.Error()
+//			return r
+//		}
+//	}
+//
+//	err = json.Unmarshal(resp.Body(), &r)
+//	if err != nil {
+//		r.Code = "DeviceUser"
+//		r.Message = err.Error()
+//		return r
+//	}
+//
+//	return r
+//}

@@ -21,14 +21,22 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-identity/models"
-
+	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 
 	"github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/snapcore/snapd/asserts"
+)
+
+const (
+	AccountKeyGetURL = "https://api.snapcraft.io/api/v1/snaps/assertions/account-key/"
 )
 
 // Logger is a logger specific to the service that can be swapped out and only affect it
@@ -49,14 +57,55 @@ type Identity interface {
 
 // IdentityService implementation of the identity use cases
 type IdentityService struct {
-	DB datastore.DataStore
+	DB                       datastore.DataStore
+	allowedSignKeyIDs        []string
+	allowedSignKeyPublicKeys map[string]asserts.PublicKey
 }
 
 // NewIdentityService creates an implementation of the identity use cases
 func NewIdentityService(db datastore.DataStore) *IdentityService {
-	return &IdentityService{
+	ids := &IdentityService{
 		DB: db,
 	}
+
+	allowedSignKeyIDs := viper.GetStringSlice(keys.ValidSHA384Keys)
+
+	if log.GetLevel() == log.TraceLevel || log.GetLevel() == log.InfoLevel {
+		log.Infof("Default organization: %s", viper.GetString(keys.DefaultOrganization))
+		log.Infof("Value for %s key: %s", keys.ValidSHA384Keys, allowedSignKeyIDs)
+		for _, k := range allowedSignKeyIDs {
+			log.Infof("Allowed sign key id: %s", k)
+		}
+	}
+
+	ids.allowedSignKeyPublicKeys = make(map[string]asserts.PublicKey)
+
+	for _, key := range allowedSignKeyIDs {
+		restyClient := resty.New()
+		req := restyClient.NewRequest()
+		req.SetHeader("Accept", "application/x.ubuntu.assertion")
+		resp, err := req.Get(AccountKeyGetURL + key)
+		if err != nil {
+			log.Errorf("Cannot retrieve account key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
+			break
+		}
+
+		accountKeyAssertion, err := asserts.Decode(resp.Body())
+		if err != nil {
+			log.Errorf("Cannot decode account key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
+			break
+		}
+
+		pubKey, err := asserts.DecodePublicKey(accountKeyAssertion.Body())
+		if err != nil {
+			log.Errorf("Cannot decode public key assertion for: %s cannot continue, will not be able to accept devices for that key", key)
+			break
+		}
+
+		ids.allowedSignKeyPublicKeys[key] = pubKey
+	}
+
+	return ids
 }
 
 // EnrollDevice connects an IoT device with the service
@@ -87,41 +136,125 @@ func (id IdentityService) EnrollDevice(req *EnrollDeviceRequest) (*domain.Enroll
 		enroll.StoreID = req.Model.Header("store").(string)
 	}
 
-	return id.enroll(&enroll)
+	return id.enroll(&enroll, req.Model, req.Serial)
 }
 
 // Enroll connects an IoT device with the service
-func (id IdentityService) enroll(enroll *datastore.DeviceEnrollRequest) (*domain.Enrollment, error) {
-	// Get the registration for the device
+func (id IdentityService) enroll(enroll *datastore.DeviceEnrollRequest, model asserts.Assertion, serial asserts.Assertion) (*domain.Enrollment, error) {
+	autoRegistrationEnabled := viper.GetBool(keys.AutoRegistrationEnabled)
+
+	log.Infof("Auto-registration is enabled = %t", autoRegistrationEnabled)
+
+	// Get the enrollment for the device, this will exist whether the device itself
+	// has enrolled or not, when a device is registered this is partially created with that info
 	dev, err := id.DB.DeviceGet(enroll.Brand, enroll.Model, enroll.SerialNumber)
-	if err != nil {
-		Logger.Println("Cannot find registration:", err)
-		return nil, err
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.Error("Trying to get device: ", err)
+		return nil, fmt.Errorf("getting device: %w", err)
 	}
 
-	// Check that the device is not already enrolled
+	// We know it's a sql.ErrNoRows error and should be handled like this
+	if err != nil {
+		log.Tracef("Not an existing device, check if auto-registration is enabled and if so, try to register")
+		if errors.Is(err, sql.ErrNoRows) && autoRegistrationEnabled {
+			log.Tracef("Checking device auto-registration eligibility")
+			canAutoRegister := id.checkAutoRegistrationEligibility(model, serial)
+			if !canAutoRegister {
+				return nil, fmt.Errorf("`%s/%s/%s` is not eligible for auto-registration and an existing registration was not found, please manually register this device", enroll.Brand, enroll.Model, enroll.SerialNumber)
+			}
+
+			// if we couldn't find the partial enrollment (registration data) AND
+			// auto-registration is enabled, then we will register the device and then enroll it
+			orgID, err := id.getDefaultOrgID()
+			if err != nil {
+				return nil, fmt.Errorf("getting default org ID: %w", err)
+			}
+
+			register := &RegisterDeviceRequest{
+				OrganizationID: orgID,
+				Brand:          enroll.Brand,
+				Model:          enroll.Model,
+				SerialNumber:   enroll.SerialNumber,
+			}
+
+			if _, err := id.RegisterDevice(register); err != nil {
+				return nil, fmt.Errorf("auto-registering device in enrollment: %w", err)
+			}
+
+			// Now that the device is registered without error, it will be created below
+		}
+	}
+
+	// All cases of err != nil have been handled and we know that the device (Enrollemnt) is never nil,
+	// so at this point it should be an existing device and we need to decide what state it is in and
+	// handle it accordingly
+	log.Tracef("Handling existing device: %s, status is: %d", dev.Device.SerialNumber, dev.Status)
 	switch dev.Status {
 	case models.StatusWaiting:
+		// this will result in the device being created before function returns
 		break
 	case models.StatusEnrolled:
-		return nil, fmt.Errorf("the device `%s/%s/%s` is already enrolled", enroll.Brand, enroll.Model, enroll.SerialNumber)
+		return nil, fmt.Errorf("`%s/%s/%s` is already enrolled", enroll.Brand, enroll.Model, enroll.SerialNumber)
 	case models.StatusDisabled:
-		return nil, fmt.Errorf("the device registration for `%s/%s/%s` is disabled", enroll.Brand, enroll.Model, enroll.SerialNumber)
+		return nil, fmt.Errorf("`%s/%s/%s` is disabled", enroll.Brand, enroll.Model, enroll.SerialNumber)
 	default:
-		return nil, fmt.Errorf("the device registration for `%s/%s/%s` is invalid", enroll.Brand, enroll.Model, enroll.SerialNumber)
+		return nil, fmt.Errorf("unexpected status for `%s/%s/%s` where status = %d", enroll.Brand, enroll.Model, enroll.SerialNumber, dev.Status)
 	}
 
-	// Enroll the device
-	en, err := id.DB.DeviceEnroll(*enroll)
+	// Enroll the device, this should happen for one of two reasons:
+	// 1. a device is registered (partially enrolled) and is in the waiting state
+	// 2. a device is not registered but autoregistration is enabled AND it satisfies the auto-registration criteria
+	return id.DB.DeviceEnroll(*enroll)
+}
+
+func (id IdentityService) checkAutoRegistrationEligibility(model asserts.Assertion, serial asserts.Assertion) bool {
+	isModelAssertionGood := id.checkKey(model)
+	isSerialAssertionGood := id.checkKey(serial)
+
+	return isModelAssertionGood && isSerialAssertionGood
+}
+
+var isKeyAllowed = isSignKeyAllowed
+var checkSignature = signatureCheck
+
+func signatureCheck(assert asserts.Assertion, pubKey asserts.PublicKey) error {
+	return asserts.SignatureCheck(assert, pubKey)
+}
+
+func isSignKeyAllowed(signKeyID string, allowedKeys map[string]asserts.PublicKey) (asserts.PublicKey, bool) {
+	if pk, ok := allowedKeys[signKeyID]; ok {
+		return pk, true
+	}
+
+	return nil, false
+}
+
+func (id IdentityService) checkKey(asrt asserts.Assertion) bool {
+	if pk, ok := isKeyAllowed(asrt.SignKeyID(), id.allowedSignKeyPublicKeys); ok {
+		err := checkSignature(asrt, pk)
+		if err != nil {
+			log.Error("Failed signature check: ", err)
+			return false
+		}
+	} else {
+		log.Tracef("This key is not allowed to auto-register, id = %s", asrt.SignKeyID())
+		return false
+	}
+
+	return true
+}
+
+func (id IdentityService) getDefaultOrgID() (string, error) {
+	orgs, err := id.OrganizationList()
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("error getting OrganizationList: %w", err)
 	}
 
-	//nolint:godox
-	// TODO: Register the device in the MQTT broker
-	// (Best to do this out-of-band by submitting a message to a queue for processing)
-	// -- from original code, before linting
+	for _, org := range orgs {
+		if org.Name == viper.GetString(keys.DefaultOrganization) {
+			return org.ID, nil
+		}
+	}
 
-	// Return the MQTT credentials to the device (which includes the unique ID of the device)
-	return en, nil
+	return "", fmt.Errorf("org not found: %s in %v", viper.GetString(keys.DefaultOrganization), orgs)
 }

@@ -69,15 +69,7 @@ var runCommand = cobra.Command{
 
 		config.LoadConfig(configFilePath)
 
-		// Open the connection to the local database
-		databaseDriver := viper.GetString(keys.DatabaseDriver)
-		dataSource := viper.GetString(keys.DatabaseConnectionString)
-		log.Infof("Connecting to %s with connection string %s", databaseDriver, dataSource)
-		db, err := factory.CreateDataStore(databaseDriver, dataSource)
-		if err != nil || db == nil {
-			log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataSource)
-			return
-		}
+		db, err := createManagementDatastore()
 
 		deviceTwinAPIURL := viper.GetString(keys.DeviceTwinAPIURL)
 		// Initialize the device twin client
@@ -98,7 +90,7 @@ var runCommand = cobra.Command{
 		dts := createDeviceTwinService(db)
 
 		// Create the main services
-		srv := manage.NewManagement(db, twinAPI, identityAPI, dts, ids)
+		srv := manage.NewManagement(db, twinAPI, identityAPI, dts.Controller, ids.Identity)
 
 		// Figure out what our auth provider is (keycloak or legacy static client token)
 		authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))
@@ -137,6 +129,20 @@ var runCommand = cobra.Command{
 
 		www.Run()
 	},
+}
+
+func createManagementDatastore() (datastore.DataStore, error) {
+	// Open the connection to the local database
+	databaseDriver := viper.GetString(keys.DatabaseDriver)
+	dataSource := viper.GetString(keys.DatabaseConnectionString)
+	log.Infof("Connecting to %s with connection string %s", databaseDriver, dataSource)
+	db, err := factory.CreateDataStore(databaseDriver, dataSource)
+	if err != nil || db == nil {
+		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataSource)
+		return nil, err
+	}
+
+	return db, err
 }
 
 func createDeviceTwinService(coreDB datastore.DataStore) *devicetwinweb.Service {

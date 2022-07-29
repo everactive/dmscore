@@ -24,14 +24,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/iot-management/domain"
+	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	mocks2 "github.com/everactive/dmscore/mocks/external/openid"
 	"net/http"
 	"net/url"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-management/config"
 	"github.com/everactive/dmscore/iot-management/config/configkey"
-	"github.com/everactive/dmscore/iot-management/datastore/memory"
-	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/juju/usso"
 	"github.com/spf13/viper"
 )
@@ -53,9 +54,13 @@ func (t *TestSSOServer) GetAccounts(_ *usso.SSOData) (string, error) {
 func TestLoginHandlerAPIClient(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	manageMock := &mocks.Manage{}
+	nonceStoreMock := &mocks2.NonceStore{}
+
+	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
+	manageMock.On("GetUser", "jamesj").Return(domain.User{Role: 100}, nil)
+
+	wb := NewService(manageMock)
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -83,11 +88,23 @@ func TestLoginHandlerAPIClient(t *testing.T) {
 }
 
 func TestLoginHandlerUserNotFound(t *testing.T) {
+	username := "jamesj"
+	role := 100
+
+	ts := TestSSOServer{
+		TokenIsValid: true,
+		Accounts:     `{ "username": "franktester", "email": "frank@example.com", "displayname": "Frank Tester" }`,
+	}
+
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	manageMock := &mocks.Manage{}
+	nonceStoreMock := &mocks2.NonceStore{}
+
+	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
+	manageMock.On("GetUser", "franktester").Return(domain.User{}, errors.New("user does not exist"))
+
+	wb := NewService(manageMock)
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -101,13 +118,8 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 	ssodatabytes, _ := json.Marshal(&ssodata)
 	bodyReader := bytes.NewReader(ssodatabytes)
 
-	ts := TestSSOServer{
-		TokenIsValid: true,
-		Accounts:     `{ "username": "franktester", "email": "frank@example.com", "displayname": "Frank Tester" }`,
-	}
-
 	ssoServer = &ts
-	w := sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w := sendRequest("GET", "/v1/login", bodyReader, wb, username, viper.GetString(configkey.JwtSecret), role)
 
 	if w.Code != http.StatusTemporaryRedirect {
 		t.Errorf("Expected HTTP status '200', got: %v", w.Code)
@@ -119,11 +131,18 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 }
 
 func TestLoginHandlerAccountsUserDNE(t *testing.T) {
+	username := "frank"
+	role := 100
+
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	manageMock := &mocks.Manage{}
+	nonceStoreMock := &mocks2.NonceStore{}
+
+	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
+	manageMock.On("GetUser", username).Return(domain.User{}, errors.New("user does not exist"))
+
+	wb := NewService(manageMock)
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -143,7 +162,7 @@ func TestLoginHandlerAccountsUserDNE(t *testing.T) {
 	}
 
 	ssoServer = &ts
-	w := sendRequest("GET", "/v1/login", bodyReader, wb, "frank", viper.GetString(configkey.JwtSecret), 100)
+	w := sendRequest("GET", "/v1/login", bodyReader, wb, username, viper.GetString(configkey.JwtSecret), role)
 
 	if w.Code != http.StatusTemporaryRedirect {
 		t.Errorf("Expected HTTP status '307', got: %v", w.Code)
@@ -153,9 +172,7 @@ func TestLoginHandlerAccountsUserDNE(t *testing.T) {
 func TestLoginHandlerAccountsError(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	wb := NewService(&mocks.Manage{})
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -194,9 +211,7 @@ func TestLoginHandlerAccountsError(t *testing.T) {
 func TestLoginHandlerTokenInvalidOrError(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	wb := NewService(&mocks.Manage{})
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -232,11 +247,18 @@ func TestLoginHandlerTokenInvalidOrError(t *testing.T) {
 }
 
 func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
+	username := "jamesj"
+	role := 100
+
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	manageMock := &mocks.Manage{}
+	nonceStoreMock := &mocks2.NonceStore{}
+
+	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
+	manageMock.On("GetUser", username).Return(domain.User{Role: role}, nil)
+
+	wb := NewService(manageMock)
 
 	ts := TestSSOServer{
 		TokenIsValid: false,
@@ -245,7 +267,7 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 
 	ssoServer = &ts
 
-	w := sendRequest("GET", "/v1/login", nil, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w := sendRequest("GET", "/v1/login", nil, wb, username, viper.GetString(configkey.JwtSecret), role)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected HTTP status '400', got: %v", w.Code)
@@ -289,9 +311,12 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 func TestLoginHandlerUSSORedirect(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	db := memory.NewStore()
-	m := manage.NewMockManagement(db)
-	wb := NewService(m)
+	manageMock := &mocks.Manage{}
+	nonceStoreMock := &mocks2.NonceStore{}
+
+	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
+
+	wb := NewService(manageMock)
 
 	w := sendRequest("GET", "/login", nil, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
 

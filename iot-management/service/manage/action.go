@@ -45,7 +45,7 @@ func (srv *Management) ActionList(orgID, username string, role int, deviceID str
 		}
 	}
 
-	actions, err := srv.DeviceTwinService.Controller.ActionList(orgID, deviceID)
+	actions, err := srv.DeviceTwinController.ActionList(orgID, deviceID)
 	if err != nil {
 		return web.ActionsResponse{
 			StandardResponse: web.StandardResponse{

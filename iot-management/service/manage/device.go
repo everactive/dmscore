@@ -65,7 +65,7 @@ func (srv *Management) DeviceList(orgID, username string, role int) web.DevicesR
 		}
 	}
 
-	deviceList, err := srv.DeviceTwinService.Controller.DeviceList(orgID)
+	deviceList, err := srv.DeviceTwinController.DeviceList(orgID)
 	if err != nil {
 		return web.DevicesResponse{
 			StandardResponse: web.StandardResponse{
@@ -105,7 +105,7 @@ func (srv *Management) DeviceGet(orgID, username string, role int, deviceID stri
 		}
 	}
 
-	device, err := srv.DeviceTwinService.Controller.DeviceGet(orgID, deviceID)
+	device, err := srv.DeviceTwinController.DeviceGet(orgID, deviceID)
 	if err != nil {
 		return web.DeviceResponse{
 			StandardResponse: web.StandardResponse{
@@ -144,11 +144,11 @@ func (srv *Management) DeviceDelete(orgID, username string, role int, deviceID s
 	twinAPIMessage := "device deleted"
 	identityAPIMessage := "device deleted"
 
-	err = srv.DeviceTwinService.Controller.DeviceDelete(deviceID)
+	err = srv.DeviceTwinController.DeviceDelete(deviceID)
 	if err != nil {
 		twinAPIMessage = err.Error()
 	}
-	_, err = srv.IdentityService.Identity.DeleteDevice(deviceID)
+	_, err = srv.Identity.DeleteDevice(deviceID)
 	if err != nil {
 		identityAPIMessage = err.Error()
 	}
@@ -177,7 +177,7 @@ func (srv *Management) DeviceLogs(orgID, username string, role int, deviceID str
 		}
 	}
 
-	err = srv.DeviceTwinService.Controller.DeviceLogs(orgID, deviceID, logs)
+	err = srv.DeviceTwinController.DeviceLogs(orgID, deviceID, logs)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "Error",
@@ -208,7 +208,7 @@ func (srv *Management) DeviceUsersAction(orgID, username string, role int, devic
 		}
 	}
 
-	err = srv.DeviceTwinService.Controller.User(orgID, deviceID, deviceUser)
+	err = srv.DeviceTwinController.User(orgID, deviceID, deviceUser)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "Error",

@@ -43,7 +43,7 @@ func (srv *Management) SnapList(orgID, username string, role int, deviceID strin
 		return web.SnapsResponse{StandardResponse: response}
 	}
 
-	snaps, err := srv.DeviceTwinService.Controller.DeviceSnaps(orgID, deviceID)
+	snaps, err := srv.DeviceTwinController.DeviceSnaps(orgID, deviceID)
 	if err != nil {
 		return web.SnapsResponse{StandardResponse: web.StandardResponse{
 			Code:    "SnapList",
@@ -56,7 +56,7 @@ func (srv *Management) SnapList(orgID, username string, role int, deviceID strin
 
 func (srv *Management) verifyOrgMatches(orgID string, deviceID string) (error, web.StandardResponse, bool) {
 	// Sanity check, verify orgID matches device
-	enrollment, err := srv.IdentityService.Identity.DeviceGet(orgID, deviceID)
+	enrollment, err := srv.Identity.DeviceGet(orgID, deviceID)
 	if err != nil {
 		return nil, web.StandardResponse{
 			Code:    "OrgIdOrName",
@@ -89,7 +89,7 @@ func (srv *Management) SnapListOnDevice(orgID, username string, role int, device
 		return response
 	}
 
-	err = srv.DeviceTwinService.Controller.DeviceSnapList(orgID, deviceID)
+	err = srv.DeviceTwinController.DeviceSnapList(orgID, deviceID)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapListOnDevice",
@@ -110,7 +110,7 @@ func (srv *Management) SnapInstall(orgID, username string, role int, deviceID, s
 		}
 	}
 
-	err := srv.DeviceTwinService.Controller.DeviceSnapInstall(orgID, deviceID, snap)
+	err := srv.DeviceTwinController.DeviceSnapInstall(orgID, deviceID, snap)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapInstall",
@@ -131,7 +131,7 @@ func (srv *Management) SnapRemove(orgID, username string, role int, deviceID, sn
 		}
 	}
 
-	err := srv.DeviceTwinService.Controller.DeviceSnapRemove(orgID, deviceID, snap)
+	err := srv.DeviceTwinController.DeviceSnapRemove(orgID, deviceID, snap)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapRemove",
@@ -155,7 +155,7 @@ func (srv *Management) SnapUpdate(orgID, username string, role int, deviceID, sn
 	snapUpdate := messages.SnapUpdate{}
 	err := json.Unmarshal(body, &snapUpdate)
 
-	err = srv.DeviceTwinService.Controller.DeviceSnapUpdate(orgID, deviceID, snap, action, &snapUpdate)
+	err = srv.DeviceTwinController.DeviceSnapUpdate(orgID, deviceID, snap, action, &snapUpdate)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapUpdate",
@@ -176,7 +176,7 @@ func (srv *Management) SnapConfigSet(orgID, username string, role int, deviceID,
 		}
 	}
 
-	err := srv.DeviceTwinService.Controller.DeviceSnapConf(orgID, deviceID, snap, string(config))
+	err := srv.DeviceTwinController.DeviceSnapConf(orgID, deviceID, snap, string(config))
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapConfigSet",
@@ -206,7 +206,7 @@ func (srv *Management) SnapServiceAction(orgID, username string, role int, devic
 		}
 	}
 
-	err = srv.DeviceTwinService.Controller.DeviceSnapServiceAction(orgID, deviceID, snap, action, &services)
+	err = srv.DeviceTwinController.DeviceSnapServiceAction(orgID, deviceID, snap, action, &services)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapServiceAction",
@@ -236,7 +236,7 @@ func (srv *Management) SnapSnapshot(orgID, username string, role int, deviceID, 
 		}
 	}
 
-	err = srv.DeviceTwinService.Controller.DeviceSnapSnapshot(orgID, deviceID, snap, &snapshot)
+	err = srv.DeviceTwinController.DeviceSnapSnapshot(orgID, deviceID, snap, &snapshot)
 	if err != nil {
 		return web.StandardResponse{
 			Code:    "SnapSnapshot",

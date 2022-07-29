@@ -20,6 +20,7 @@
 package devicetwin
 
 import (
+	"github.com/everactive/dmscore/iot-management/datastore/mocks"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore/memory"
@@ -42,7 +43,7 @@ func TestService_GroupGetExcludedDevices(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore())
+			srv := NewService(memory.NewStore(), &mocks.DataStore{})
 			got, err := srv.GroupGetExcludedDevices(localtt.args.orgID, localtt.args.name)
 			if (err != nil) != localtt.wantErr {
 				t.Errorf("Service.GroupGetExcludedDevices() error = %v, wantErr %v", err, localtt.wantErr)
