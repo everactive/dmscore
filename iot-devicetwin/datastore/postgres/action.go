@@ -48,10 +48,9 @@ func (db *DataStore) ActionCreate(act datastore.Action) (int64, error) {
 
 // ActionUpdate updates an action record
 func (db *DataStore) ActionUpdate(actionID, status, message string) error {
-	res := db.gormDB.Where("actionID = ?", actionID).Save(&datastore.Action{
-		Status:  status,
-		Message: message,
-	})
+	res := db.gormDB.Model(&datastore.Action{}).
+		Where("action_id = ?", actionID).
+		Updates(&datastore.Action{Status: status, Message: message})
 
 	if res.Error != nil {
 		log.Error(res.Error)
