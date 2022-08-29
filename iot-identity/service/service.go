@@ -185,20 +185,22 @@ func (id IdentityService) enroll(enroll *datastore.DeviceEnrollRequest, model as
 		}
 	}
 
-	// All cases of err != nil have been handled and we know that the device (Enrollemnt) is never nil,
-	// so at this point it should be an existing device and we need to decide what state it is in and
-	// handle it accordingly
-	log.Tracef("Handling existing device: %s, status is: %d", dev.Device.SerialNumber, dev.Status)
-	switch dev.Status {
-	case models.StatusWaiting:
-		// this will result in the device being created before function returns
-		break
-	case models.StatusEnrolled:
-		return nil, fmt.Errorf("`%s/%s/%s` is already enrolled", enroll.Brand, enroll.Model, enroll.SerialNumber)
-	case models.StatusDisabled:
-		return nil, fmt.Errorf("`%s/%s/%s` is disabled", enroll.Brand, enroll.Model, enroll.SerialNumber)
-	default:
-		return nil, fmt.Errorf("unexpected status for `%s/%s/%s` where status = %d", enroll.Brand, enroll.Model, enroll.SerialNumber, dev.Status)
+	if dev != nil {
+		// All cases of err != nil have been handled and we know that the device (Enrollment) is never nil,
+		// so at this point it should be an existing device and we need to decide what state it is in and
+		// handle it accordingly
+		log.Tracef("Handling existing device: %s, status is: %d", dev.Device.SerialNumber, dev.Status)
+		switch dev.Status {
+		case models.StatusWaiting:
+			// this will result in the device being created before function returns
+			break
+		case models.StatusEnrolled:
+			return nil, fmt.Errorf("`%s/%s/%s` is already enrolled", enroll.Brand, enroll.Model, enroll.SerialNumber)
+		case models.StatusDisabled:
+			return nil, fmt.Errorf("`%s/%s/%s` is disabled", enroll.Brand, enroll.Model, enroll.SerialNumber)
+		default:
+			return nil, fmt.Errorf("unexpected status for `%s/%s/%s` where status = %d", enroll.Brand, enroll.Model, enroll.SerialNumber, dev.Status)
+		}
 	}
 
 	// Enroll the device, this should happen for one of two reasons:
