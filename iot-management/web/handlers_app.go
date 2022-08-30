@@ -69,8 +69,7 @@ func (wb Service) VersionHandler(c *gin.Context) {
 	w.Header().Set("Content-Type", JSONHeader)
 	w.WriteHeader(http.StatusOK)
 
-	componentVersions := versions.GetComponentVersions()
-	response := VersionResponse{Versions: componentVersions}
+	response := VersionResponse{Versions: map[string]string{"dmscore": versions.Version}}
 
 	// Encode the response as JSON
 	if err := json.NewEncoder(w).Encode(response); err != nil {

@@ -42,6 +42,7 @@ import (
 
 func init() {
 	Root.AddCommand(&runCommand)
+	Root.AddCommand(&version)
 
 	Root.AddCommand(&createSuperuser)
 	createSuperuser.Flags().String("username", "", "The username of the user to create (must match Ubuntu SSO)")
