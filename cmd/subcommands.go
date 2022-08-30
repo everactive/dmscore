@@ -1,16 +1,26 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/service/factory"
+	"github.com/everactive/dmscore/versions"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 )
 
+var version = cobra.Command{
+	Use:   "version",
+	Short: "version",
+	Long:  "version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(versions.Version)
+	},
+}
 var createSuperuser = cobra.Command{
 	Use:   "create-superuser",
 	Short: "create-superuser",
