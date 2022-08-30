@@ -20,22 +20,25 @@
 package web
 
 import (
+	"github.com/everactive/dmscore/api"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 )
 
 var AuthMiddleWare gin.HandlerFunc
 
 func (wb Service) authMiddleWare() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		user, err := wb.checkIsStandardAndGetUserFromJWT(c)
+	return func(ctx *gin.Context) {
+		user, err := wb.checkIsStandardAndGetUserFromJWT(ctx)
 		if err != nil {
 			log.Error(err)
-			formatStandardResponse("UserAuth", "", c)
+			response := api.StandardResponse{Code: "UserAuth", Message: ""}
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, &response)
 			return
 		}
 
-		c.Set("USER", &user)
+		ctx.Set("USER", &user)
 	}
 }
 

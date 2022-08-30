@@ -34,7 +34,12 @@ import (
 func formatStandardResponse(errorCode, message string, c *gin.Context) {
 	response := api.StandardResponse{Code: errorCode, Message: message}
 	if len(errorCode) > 0 {
-		c.JSON(http.StatusBadRequest, response)
+		code := http.StatusBadRequest
+		switch errorCode {
+		case "UserAuth":
+			code = http.StatusUnauthorized
+		}
+		c.JSON(code, response)
 		return
 	}
 
