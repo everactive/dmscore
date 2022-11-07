@@ -68,7 +68,7 @@ func (db *DataStore) ActionListForDevice(orgID, deviceID string) ([]datastore.Ac
 	}
 
 	actions := []datastore.Action{}
-	res := db.gormDB.Where("org_id = ? AND device_id = ?", orgID, deviceID).Find(&actions)
+	res := db.gormDB.Where("org_id = ? AND device_id = ?", orgID, deviceID).Order("updated_at desc").Find(&actions)
 	if res.Error != nil {
 		log.Error(res.Error)
 		return actions, res.Error
