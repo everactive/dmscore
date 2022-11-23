@@ -1,4 +1,4 @@
-name: Go package
+name: dmscore
 
 on: [push]
 
