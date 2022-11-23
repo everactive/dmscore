@@ -21,11 +21,11 @@ package usso
 
 import (
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
@@ -66,8 +66,8 @@ func LoginHandler(nonce openid.NonceStore, w http.ResponseWriter, r *http.Reques
 	url := *r.URL
 
 	// Set the return URL: from the OpenID login with the full domain name
-	url.Scheme = viper.GetString(configkey.ServiceScheme)
-	url.Host = viper.GetString(configkey.ServiceHost)
+	url.Scheme = viper.GetString(keys.ServiceScheme)
+	url.Host = viper.GetString(keys.ServiceHost)
 
 	if r.Form.Get("openid.ns") == "" {
 		req := openid.Request{
@@ -121,8 +121,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		AddJWTCookie(jwtToken, w)
 	}
 
-	frontendHost := viper.GetString(configkey.FrontEndHost)
-	frontendScheme := viper.GetString(configkey.FrontEndScheme)
+	frontendHost := viper.GetString(keys.FrontEndHost)
+	frontendScheme := viper.GetString(keys.FrontEndScheme)
 
 	// Both values have to exist and have values for the alternate redirect
 	if frontendScheme != "" && frontendHost != "" {

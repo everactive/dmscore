@@ -23,10 +23,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"html/template"
 	"net/http"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	webusso "github.com/everactive/dmscore/iot-management/web/usso"
 	"github.com/gin-gonic/gin"
@@ -114,7 +114,7 @@ func (wb Service) LoginHandlerAPIClient(c *gin.Context) {
 		return
 	}
 
-	jwtSecret := viper.GetString(configkey.JwtSecret)
+	jwtSecret := viper.GetString(keys.JwtSecret)
 
 	// Build the JWT
 	jwtToken, err := webusso.NewJWTTokenForClient(jwtSecret, accts.Username, accts.DisplayName, accts.Email, ssodata.TokenKey, user.Role)
@@ -163,7 +163,7 @@ func (wb Service) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	jwtSecret := viper.GetString(configkey.JwtSecret)
+	jwtSecret := viper.GetString(keys.JwtSecret)
 
 	// Build the JWT
 	jwtToken, err := webusso.NewJWTToken(jwtSecret, resp, user.Role)
@@ -177,8 +177,8 @@ func (wb Service) LoginHandler(c *gin.Context) {
 	// Set a cookie with the JWT
 	webusso.AddJWTCookie(jwtToken, w)
 
-	frontendHost := viper.GetString(configkey.FrontEndHost)
-	frontendScheme := viper.GetString(configkey.FrontEndScheme)
+	frontendHost := viper.GetString(keys.FrontEndHost)
+	frontendScheme := viper.GetString(keys.FrontEndScheme)
 
 	// Both values have to exist and have values for the alternate redirect
 	if frontendScheme != "" && frontendHost != "" {
