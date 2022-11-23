@@ -20,13 +20,13 @@
 package web
 
 import (
+	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
 	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/crypt"
 	"github.com/spf13/viper"
 )
@@ -52,7 +52,7 @@ func TestService_DeviceHandlers(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			manageMock.On("DeviceList", mock.Anything, mock.Anything, mock.Anything).Return(web.DevicesResponse{})
@@ -93,7 +93,7 @@ func TestService_ActionListHandler(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			manageMock.On("ActionList", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(web.ActionsResponse{})

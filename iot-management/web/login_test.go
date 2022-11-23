@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/iot-management/domain"
 	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
 	mocks2 "github.com/everactive/dmscore/mocks/external/openid"
@@ -31,8 +32,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/config"
-	"github.com/everactive/dmscore/iot-management/config/configkey"
+	"github.com/everactive/dmscore/config/keys"
 	"github.com/juju/usso"
 	"github.com/spf13/viper"
 )
@@ -119,7 +119,7 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 	bodyReader := bytes.NewReader(ssodatabytes)
 
 	ssoServer = &ts
-	w := sendRequest("GET", "/v1/login", bodyReader, wb, username, viper.GetString(configkey.JwtSecret), role)
+	w := sendRequest("GET", "/v1/login", bodyReader, wb, username, viper.GetString(keys.JwtSecret), role)
 
 	if w.Code != http.StatusTemporaryRedirect {
 		t.Errorf("Expected HTTP status '200', got: %v", w.Code)
@@ -162,7 +162,7 @@ func TestLoginHandlerAccountsUserDNE(t *testing.T) {
 	}
 
 	ssoServer = &ts
-	w := sendRequest("GET", "/v1/login", bodyReader, wb, username, viper.GetString(configkey.JwtSecret), role)
+	w := sendRequest("GET", "/v1/login", bodyReader, wb, username, viper.GetString(keys.JwtSecret), role)
 
 	if w.Code != http.StatusTemporaryRedirect {
 		t.Errorf("Expected HTTP status '307', got: %v", w.Code)
@@ -192,7 +192,7 @@ func TestLoginHandlerAccountsError(t *testing.T) {
 
 	ssoServer = &ts
 	ts.ReturnError = errors.New("there was an error getting accounts")
-	w := sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w := sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("Expected HTTP status '400', got: %v", w.Code)
@@ -201,7 +201,7 @@ func TestLoginHandlerAccountsError(t *testing.T) {
 	bodyReader = bytes.NewReader(ssodatabytes)
 	ts.ReturnError = nil
 	ts.Accounts = "......"
-	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("Expected HTTP status '401', got: %v", w.Code)
@@ -231,7 +231,7 @@ func TestLoginHandlerTokenInvalidOrError(t *testing.T) {
 	}
 
 	ssoServer = &ts
-	w := sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w := sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("Expected HTTP status '400', got: %v", w.Code)
@@ -239,7 +239,7 @@ func TestLoginHandlerTokenInvalidOrError(t *testing.T) {
 
 	bodyReader = bytes.NewReader(ssodatabytes)
 	ts.ReturnError = errors.New("there was an error checking if token is invalid")
-	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("Expected HTTP status '401', got: %v", w.Code)
@@ -267,7 +267,7 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 
 	ssoServer = &ts
 
-	w := sendRequest("GET", "/v1/login", nil, wb, username, viper.GetString(configkey.JwtSecret), role)
+	w := sendRequest("GET", "/v1/login", nil, wb, username, viper.GetString(keys.JwtSecret), role)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected HTTP status '400', got: %v", w.Code)
@@ -276,7 +276,7 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 	body := `................`
 	bodyReader := bytes.NewReader([]byte(body))
 
-	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected HTTP status '400', got: %v", w.Code)
 	}
@@ -284,7 +284,7 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 	body = `{ "malformed": "body-doesnt-make-sense" }`
 	bodyReader = bytes.NewReader([]byte(body))
 
-	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected HTTP status '400', got: %v", w.Code)
 	}
@@ -302,7 +302,7 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 	}
 	ssodatabytes, _ := json.Marshal(&ssodata)
 	bodyReader = bytes.NewReader(ssodatabytes)
-	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w = sendRequest("GET", "/v1/login", bodyReader, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected HTTP status '200', got: %v", w.Code)
 	}
@@ -318,7 +318,7 @@ func TestLoginHandlerUSSORedirect(t *testing.T) {
 
 	wb := NewService(manageMock)
 
-	w := sendRequest("GET", "/login", nil, wb, "jamesj", viper.GetString(configkey.JwtSecret), 100)
+	w := sendRequest("GET", "/login", nil, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 
 	if w.Code != http.StatusFound {
 		t.Errorf("Expected HTTP status '302', got: %v", w.Code)
