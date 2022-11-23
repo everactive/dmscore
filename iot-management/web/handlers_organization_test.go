@@ -45,7 +45,7 @@ func TestService_OrganizationListHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/organizations", "jamesj", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/organizations", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations", "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 		{"valid", "/v1/organizations", "unknown", 300, http.StatusOK, ""},
 		{"invalid-user", "/v1/organizations", "invalid", 200, http.StatusBadRequest, "OrgList"},
 	}
@@ -94,7 +94,7 @@ func TestService_OrganizationCreateHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/organizations", "jamesj", 300, []byte(`{"country":"GB","name":"Test Inc"}`), http.StatusOK, ""},
-		{"invalid-permissions", "/v1/organizations", "jamesj", 200, []byte(`{"country":"GB","name":"Test Inc"}`), http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations", "jamesj", 200, []byte(`{"country":"GB","name":"Test Inc"}`), http.StatusUnauthorized, "UserAuth"},
 		{"invalid-data", "/v1/organizations", "jamesj", 300, []byte(`\u1000`), http.StatusBadRequest, "OrgCreate"},
 		{"invalid-data-empty", "/v1/organizations", "jamesj", 300, []byte(``), http.StatusBadRequest, "OrgCreate"},
 	}
@@ -149,7 +149,7 @@ func TestService_OrganizationUpdateHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/organizations/abc", "jamesj", 300, []byte(`{"orgid":"abc","name":"Test Inc"}`), http.StatusOK, ""},
 		{"invalid-org", "/v1/organizations/def", "jamesj", 300, []byte(`{"orgid":"def","name":"Test Inc"}`), http.StatusBadRequest, "OrgUpdate"},
-		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, []byte(`{"orgid":"abc","name":"Test Inc"}`), http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, []byte(`{"orgid":"abc","name":"Test Inc"}`), http.StatusUnauthorized, "UserAuth"},
 		{"invalid-data", "/v1/organizations/abc", "jamesj", 300, []byte(`\u1000`), http.StatusBadRequest, "OrgUpdate"},
 		{"invalid-data-empty", "/v1/organizations/abc", "jamesj", 300, []byte(``), http.StatusBadRequest, "OrgUpdate"},
 	}
@@ -203,7 +203,7 @@ func TestService_OrganizationGetHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/organizations/abc", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "/v1/organizations/invalid", "jamesj", 300, http.StatusBadRequest, "OrgGet"},
-		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -247,7 +247,7 @@ func TestService_OrganizationsForUserHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users/jamesj/organizations", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "/v1/users/invalid/organizations", "invalid", 300, http.StatusBadRequest, "OrgList"},
-		{"invalid-permissions", "/v1/users/jamesj/organizations", "jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj/organizations", "jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -289,7 +289,7 @@ func TestService_OrganizationUpdateForUserHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users/jamesj/organizations/abc", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "/v1/users/invalid/organizations/abc", "invalid", 300, http.StatusBadRequest, "UserOrg"},
-		{"invalid-permissions", "/v1/users/jamesj/organizations/abc", "jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj/organizations/abc", "jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

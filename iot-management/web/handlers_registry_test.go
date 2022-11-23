@@ -39,7 +39,7 @@ func TestService_RegDeviceList(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "abc", "/v1/%s/register/devices", "jamesj", 300, http.StatusOK, ""},
-		{"invalid-permissions", "abc", "/v1/%s/register/devices", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "abc", "/v1/%s/register/devices", "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestService_RegDeviceGet(t *testing.T) {
 	}{
 		{"valid", "abc", "a111", "/v1/%s/register/devices/%s", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "abc", "invalid", "/v1/%s/register/devices/%s", "jamesj", 300, http.StatusBadRequest, "RegDeviceAuth"},
-		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s", "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -128,7 +128,7 @@ func TestService_RegisterDevice(t *testing.T) {
 	}{
 		{"valid", "abc", "/v1/%s/register/devices", d1, "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "bbb", "/v1/%s/register/devices", d1, "jamesj", 300, http.StatusBadRequest, "RegDevice"},
-		{"invalid-permissions", "abc", "/v1/%s/register/devices", d1, "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "abc", "/v1/%s/register/devices", d1, "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 		{"invalid-data", "abc", "/v1/%s/register/devices", []byte(`\u1000`), "jamesj", 300, http.StatusBadRequest, "RegDevice"},
 	}
 	for _, tt := range tests {
@@ -180,7 +180,7 @@ func TestService_RegDeviceUpdate(t *testing.T) {
 	}{
 		{"valid", "abc", "a111", "/v1/%s/register/devices/%s", d1, "jamesj", 300, http.StatusOK, ""},
 		{"invalid-device", "abc", "invalid", "/v1/%s/register/devices/%s", d1, "jamesj", 300, http.StatusBadRequest, "RegDeviceUpdate"},
-		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s", d1, "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s", d1, "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -222,7 +222,7 @@ func TestService_RegDeviceGetDownload(t *testing.T) {
 	}{
 		{"valid", "abc", "a111", "/v1/%s/register/devices/%s/download", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "abc", "invalid", "/v1/%s/register/devices/%s/download", "jamesj", 300, http.StatusBadRequest, "RegDeviceAuth"},
-		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s/download", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "abc", "a111", "/v1/%s/register/devices/%s/download", "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

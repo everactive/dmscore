@@ -41,7 +41,7 @@ func TestService_SnapListHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "abc", "a111", "everactive", "/v1/device/%s/%s/snaps", 300, http.StatusOK, ""},
-		{"invalid-permissions", "abc", "a111", "everactive", "/v1/device/%s/%s/snaps", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "abc", "a111", "everactive", "/v1/device/%s/%s/snaps", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -83,7 +83,7 @@ func TestService_SnapWorkflow_SnapListOnDevice(t *testing.T) {
 		wantErr     string
 	}{
 		{"list-valid", "POST", "abc", "a111", "everactive", "/v1/snaps/%s/%s/list", nil, 300, http.StatusOK, ""},
-		{"list-invalid-permissions", "POST", "abc", "a111", "everactive", "/v1/snaps/%s/%s/list", nil, 0, http.StatusBadRequest, "UserAuth"},
+		{"list-invalid-permissions", "POST", "abc", "a111", "everactive", "/v1/snaps/%s/%s/list", nil, 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,7 +126,7 @@ func TestService_SnapWorkflow_SnapInstall(t *testing.T) {
 		wantErr     string
 	}{
 		{"install-valid", "POST", "abc", "a111", "everactive", "helloworld", "/v1/snaps/%s/%s/%s", nil, 300, http.StatusOK, ""},
-		{"install-invalid-permissions", "POST", "abc", "a111", "everactive", "helloworld", "/v1/snaps/%s/%s/%s", nil, 0, http.StatusBadRequest, "UserAuth"},
+		{"install-invalid-permissions", "POST", "abc", "a111", "everactive", "helloworld", "/v1/snaps/%s/%s/%s", nil, 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -170,7 +170,7 @@ func TestService_SnapWorkflow_SnapDelete(t *testing.T) {
 		wantErr     string
 	}{
 		{"delete-valid", "/v1/snaps/%s/%s/%s", nil, 300, http.StatusOK, ""},
-		{"delete-invalid-permissions", "/v1/snaps/%s/%s/%s", nil, 0, http.StatusBadRequest, "UserAuth"},
+		{"delete-invalid-permissions", "/v1/snaps/%s/%s/%s", nil, 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestService_SnapWorkflow_SnapUpdate(t *testing.T) {
 		{"update-valid-disable", "/v1/snaps/%s/%s/%s/disable", nil, 300, http.StatusOK, ""},
 		{"update-valid-switch", "/v1/snaps/%s/%s/%s/switch", []byte("{}"), 300, http.StatusOK, ""},
 		{"update-action-invalid", "/v1/snaps/%s/%s/%s/invalid", nil, 300, http.StatusBadRequest, "SnapUpdate"},
-		{"update-invalid-permissions", "/v1/snaps/%s/%s/%s/refresh", nil, 0, http.StatusBadRequest, "UserAuth"},
+		{"update-invalid-permissions", "/v1/snaps/%s/%s/%s/refresh", nil, 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -267,7 +267,7 @@ func TestService_SnapWorkflow_SnapConfigUpdate(t *testing.T) {
 	}{
 		{"config-valid", []byte("{}"), 300, http.StatusOK, ""},
 		{"config-valid-empty", nil, 300, http.StatusOK, ""},
-		{"config-invalid-permissions", []byte("{}"), 0, http.StatusBadRequest, "UserAuth"},
+		{"config-invalid-permissions", []byte("{}"), 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -315,7 +315,7 @@ func TestService_SnapWorkflow_SnapSnapshot(t *testing.T) {
 		wantErr     string
 	}{
 		{"send-snapshot-valid", []byte("{}"), 300, http.StatusOK, ""},
-		{"send-snapshot-invalid-permissions", []byte("{}"), 0, http.StatusBadRequest, "UserAuth"},
+		{"send-snapshot-invalid-permissions", []byte("{}"), 0, http.StatusUnauthorized, "UserAuth"},
 		{"send-snapshot-valid-empty", nil, 300, http.StatusBadRequest, "SnapSnapshot"},
 	}
 	for _, tt := range tests {
