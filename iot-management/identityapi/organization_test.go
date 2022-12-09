@@ -23,11 +23,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"path"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-identity/service"
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/spf13/viper"
@@ -66,7 +66,7 @@ func TestClientAdapter_RegisterOrganization(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			b, _ := json.Marshal(service.RegisterOrganizationRequest{Name: tt.args.name, CountryName: tt.args.country})
 
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 			defer httpmock.DeactivateAndReset()
@@ -121,7 +121,7 @@ func TestClientAdapter_RegOrganizationList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 			defer httpmock.DeactivateAndReset()

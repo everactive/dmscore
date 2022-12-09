@@ -3,6 +3,11 @@ package keys
 import "fmt"
 
 const (
+	// ModelKeyTemplate is the template for getting a model key based on the model string
+	ModelKeyTemplate = "store.model.%s"
+)
+
+const (
 	DeviceTwinKeyPrefix = "devicetwin"
 	IdentityKeyPrefix   = "identity"
 
@@ -61,6 +66,32 @@ const (
 	// ValidSHA384Keys is and array of the SHA384 of public keys that are acceptable to have signed model and serial
 	// assertions for auto-registration during enrollment
 	ValidSHA384Keys = "identity.assertions.valid.key.signatures"
+	// StoreURL is the URL to Canonicals Snap Store API
+	StoreURL = "store.url"
+	// StoreIDs is a JSON serialized array of modelStoreIds
+	StoreIDs = "store.ids"
+	// ClientTokenProvider is the provider for access tokens for external APIs
+	ClientTokenProvider = "service.client.token.provider"
+	// FrontEndScheme is the protocol scheme for the frontend
+	FrontEndScheme = "frontend.scheme"
+	// FrontEndHost is the host for the frontend (ex. localhost:80, localhost:8080, etc.)
+	FrontEndHost = "frontend.host"
+	// ComponentVersionsCacheDuration is a time.Duration of the time between when component version information is read from disk
+	ComponentVersionsCacheDuration = "service.component.versions.cache.duration"
+	// JwtSecret is the JWT secret value
+	JwtSecret = "service.jwtsecret" //nolint
+	// OAuth2ClientID is the client id for the client credential grant
+	OAuth2ClientID = "service.oauth2.client.id"
+	// OAuth2ClientSecret is the client secret for the client credential grant
+	OAuth2ClientSecret = "service.oauth2.client.secret" //nolint:gosec
+	// OAuth2AccessTokenPath is the path part of the URL for getting a token verified/decoded
+	OAuth2AccessTokenPath = "service.oauth2.token.access.path" //nolint:gosec
+	// OAuth2HostName is the host name or IP of the auth provider
+	OAuth2HostName = "service.oauth2.host.name"
+	// OAuth2HostPort is the port for the auth provider (optional to override default for scheme)
+	OAuth2HostPort = "service.oauth2.host.port"
+	// OAuth2HostScheme the scheme for the auth provider (only https should be used)
+	OAuth2HostScheme = "service.oauth2.host.scheme"
 )
 
 func GetIdentityKey(key string) string {

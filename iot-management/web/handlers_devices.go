@@ -31,19 +31,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func formatStandardResponse(errorCode, message string, c *gin.Context) {
+func formatStandardResponseWithStatusCode(errorCode, message string, statusCode int, c *gin.Context) {
 	response := api.StandardResponse{Code: errorCode, Message: message}
+	c.JSON(statusCode, response)
+}
+
+func formatStandardResponse(errorCode, message string, c *gin.Context) {
 	if len(errorCode) > 0 {
 		code := http.StatusBadRequest
 		switch errorCode {
 		case "UserAuth":
 			code = http.StatusUnauthorized
 		}
-		c.JSON(code, response)
-		return
+		formatStandardResponseWithStatusCode(errorCode, message, code, c)
 	}
 
-	c.JSON(http.StatusOK, response)
+	formatStandardResponseWithStatusCode(errorCode, message, http.StatusOK, c)
 }
 
 // DevicesListHandler is the API method to list the registered devices
@@ -108,7 +111,7 @@ func (wb Service) ActionListHandler(c *gin.Context) {
 	_ = encodeResponse(response, w)
 }
 
-//nolint
+// nolint
 // DeviceLogsHandler is the API method to get logs for a device
 func (wb Service) DeviceLogsHandler(c *gin.Context) {
 	w := c.Writer
@@ -132,7 +135,7 @@ func (wb Service) DeviceLogsHandler(c *gin.Context) {
 	_ = encodeResponse(response, w)
 }
 
-//nolint
+// nolint
 // DeviceUsersActionHandler is the API method to create a user for a device
 func (wb Service) DeviceUsersActionHandler(c *gin.Context) {
 	w := c.Writer

@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/everactive/dmscore/config/keys"
 	domain2 "github.com/everactive/dmscore/iot-management/domain"
 	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
 	"github.com/stretchr/testify/mock"
@@ -30,7 +31,6 @@ import (
 	"path"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/crypt"
 	"github.com/spf13/viper"
 )
@@ -45,7 +45,7 @@ func TestService_OrganizationListHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/organizations", "jamesj", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/organizations", "jamesj", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations", "jamesj", 0, http.StatusUnauthorized, "UserAuth"},
 		{"valid", "/v1/organizations", "unknown", 300, http.StatusOK, ""},
 		{"invalid-user", "/v1/organizations", "invalid", 200, http.StatusBadRequest, "OrgList"},
 	}
@@ -56,7 +56,7 @@ func TestService_OrganizationListHandler(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			wb := NewService(manageMock)
@@ -67,7 +67,7 @@ func TestService_OrganizationListHandler(t *testing.T) {
 				manageMock.On("OrganizationsForUser", tt.username).Return([]domain2.Organization{}, errors.New("some error, doesn't matter"))
 			}
 
-			w := sendRequest("GET", tt.url, nil, wb, tt.username, viper.GetString(configkey.JwtSecret), tt.permissions)
+			w := sendRequest("GET", tt.url, nil, wb, tt.username, viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -94,7 +94,7 @@ func TestService_OrganizationCreateHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/organizations", "jamesj", 300, []byte(`{"country":"GB","name":"Test Inc"}`), http.StatusOK, ""},
-		{"invalid-permissions", "/v1/organizations", "jamesj", 200, []byte(`{"country":"GB","name":"Test Inc"}`), http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations", "jamesj", 200, []byte(`{"country":"GB","name":"Test Inc"}`), http.StatusUnauthorized, "UserAuth"},
 		{"invalid-data", "/v1/organizations", "jamesj", 300, []byte(`\u1000`), http.StatusBadRequest, "OrgCreate"},
 		{"invalid-data-empty", "/v1/organizations", "jamesj", 300, []byte(``), http.StatusBadRequest, "OrgCreate"},
 	}
@@ -105,7 +105,7 @@ func TestService_OrganizationCreateHandler(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			wb := NewService(manageMock)
@@ -121,7 +121,7 @@ func TestService_OrganizationCreateHandler(t *testing.T) {
 			} else {
 				manageMock.On("OrganizationCreate", mock.Anything).Return(errors.New("some error, doesn't matter"))
 			}
-			w := sendRequest("POST", tt.url, bytes.NewReader(tt.data), wb, tt.username, viper.GetString(configkey.JwtSecret), tt.permissions)
+			w := sendRequest("POST", tt.url, bytes.NewReader(tt.data), wb, tt.username, viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -149,7 +149,7 @@ func TestService_OrganizationUpdateHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/organizations/abc", "jamesj", 300, []byte(`{"orgid":"abc","name":"Test Inc"}`), http.StatusOK, ""},
 		{"invalid-org", "/v1/organizations/def", "jamesj", 300, []byte(`{"orgid":"def","name":"Test Inc"}`), http.StatusBadRequest, "OrgUpdate"},
-		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, []byte(`{"orgid":"abc","name":"Test Inc"}`), http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, []byte(`{"orgid":"abc","name":"Test Inc"}`), http.StatusUnauthorized, "UserAuth"},
 		{"invalid-data", "/v1/organizations/abc", "jamesj", 300, []byte(`\u1000`), http.StatusBadRequest, "OrgUpdate"},
 		{"invalid-data-empty", "/v1/organizations/abc", "jamesj", 300, []byte(``), http.StatusBadRequest, "OrgUpdate"},
 	}
@@ -160,7 +160,7 @@ func TestService_OrganizationUpdateHandler(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			wb := NewService(manageMock)
@@ -176,7 +176,7 @@ func TestService_OrganizationUpdateHandler(t *testing.T) {
 				manageMock.On("OrganizationUpdate", mock.Anything).Return(errors.New("some error test, doesn't matter"))
 			}
 
-			w := sendRequest("PUT", tt.url, bytes.NewReader(tt.data), wb, tt.username, viper.GetString(configkey.JwtSecret), tt.permissions)
+			w := sendRequest("PUT", tt.url, bytes.NewReader(tt.data), wb, tt.username, viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -203,7 +203,7 @@ func TestService_OrganizationGetHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/organizations/abc", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "/v1/organizations/invalid", "jamesj", 300, http.StatusBadRequest, "OrgGet"},
-		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/organizations/abc", "jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -220,7 +220,7 @@ func TestService_OrganizationGetHandler(t *testing.T) {
 				manageMock.On("OrganizationGet", file).Return(domain2.Organization{}, errors.New("some error text, doesn't matter"))
 			}
 
-			w := sendRequest("GET", tt.url, nil, wb, tt.username, viper.GetString(configkey.JwtSecret), tt.permissions)
+			w := sendRequest("GET", tt.url, nil, wb, tt.username, viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -247,7 +247,7 @@ func TestService_OrganizationsForUserHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users/jamesj/organizations", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "/v1/users/invalid/organizations", "invalid", 300, http.StatusBadRequest, "OrgList"},
-		{"invalid-permissions", "/v1/users/jamesj/organizations", "jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj/organizations", "jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -262,7 +262,7 @@ func TestService_OrganizationsForUserHandler(t *testing.T) {
 				manageMock.On("OrganizationsForUser", tt.username).Return([]domain2.Organization{}, errors.New("some text, doesn't matter"))
 			}
 
-			w := sendRequest("GET", tt.url, nil, wb, tt.username, viper.GetString(configkey.JwtSecret), tt.permissions)
+			w := sendRequest("GET", tt.url, nil, wb, tt.username, viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -289,7 +289,7 @@ func TestService_OrganizationUpdateForUserHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users/jamesj/organizations/abc", "jamesj", 300, http.StatusOK, ""},
 		{"invalid-org", "/v1/users/invalid/organizations/abc", "invalid", 300, http.StatusBadRequest, "UserOrg"},
-		{"invalid-permissions", "/v1/users/jamesj/organizations/abc", "jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj/organizations/abc", "jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -305,7 +305,7 @@ func TestService_OrganizationUpdateForUserHandler(t *testing.T) {
 				manageMock.On("OrganizationForUserToggle", orgID, tt.username).Return(errors.New("doesn't matter"))
 			}
 
-			w := sendRequest("POST", tt.url, nil, wb, tt.username, viper.GetString(configkey.JwtSecret), tt.permissions)
+			w := sendRequest("POST", tt.url, nil, wb, tt.username, viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
 			}
@@ -327,6 +327,6 @@ func createAndSetJWTSecret(t *testing.T) string {
 		t.Fatalf("Error generating JWT secret: %s", err)
 		return ""
 	}
-	viper.Set(configkey.JwtSecret, secret)
+	viper.Set(keys.JwtSecret, secret)
 	return secret
 }

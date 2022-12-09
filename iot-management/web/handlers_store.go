@@ -21,11 +21,10 @@ package web
 
 import (
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/everactive/dmscore/iot-management/config"
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -44,7 +43,7 @@ func (wb Service) StoreSearchHandler(c *gin.Context) {
 	}
 	w.Header().Set("Content-Type", JSONHeader)
 
-	storeURL := viper.GetString(configkey.StoreURL)
+	storeURL := viper.GetString(keys.StoreURL)
 	req, err := http.NewRequest("GET", storeURL+"snaps/search?q="+c.Param("snapName"), nil)
 	if err != nil {
 		log.Error(err)
@@ -53,7 +52,7 @@ func (wb Service) StoreSearchHandler(c *gin.Context) {
 	}
 	req.Header.Add("X-Ubuntu-Series", "16")
 
-	storeID := viper.GetString(fmt.Sprintf(config.ModelKeyTemplate, c.Param("model")))
+	storeID := viper.GetString(fmt.Sprintf(keys.ModelKeyTemplate, c.Param("model")))
 	if storeID == "" {
 		log.Errorf("unrecognized device model: %s", c.Param("model"))
 		_, errInt := fmt.Fprint(w, "{}")

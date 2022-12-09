@@ -4,9 +4,9 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"net/url"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/domain"
 	"github.com/everactive/dmscore/iot-management/web"
@@ -25,20 +25,20 @@ var (
 func TokenGetter() *ginkeycloak.TokenGetter {
 	if tokenGetter == nil {
 		log.Tracef("tokenGetter == nil")
-		clientID := viper.GetString(configkey.OAuth2ClientID)
-		clientSecret := viper.GetString(configkey.OAuth2ClientSecret)
+		clientID := viper.GetString(keys.OAuth2ClientID)
+		clientSecret := viper.GetString(keys.OAuth2ClientSecret)
 
 		scheme := "https"
 		port := "443"
-		if viper.GetString(configkey.OAuth2HostScheme) != "" {
-			scheme = viper.GetString(configkey.OAuth2HostScheme)
+		if viper.GetString(keys.OAuth2HostScheme) != "" {
+			scheme = viper.GetString(keys.OAuth2HostScheme)
 		}
-		if viper.GetString(configkey.OAuth2HostPort) != "" {
-			port = viper.GetString(configkey.OAuth2HostPort)
+		if viper.GetString(keys.OAuth2HostPort) != "" {
+			port = viper.GetString(keys.OAuth2HostPort)
 		}
 
-		host := viper.GetString(configkey.OAuth2HostName)
-		tokenPath := viper.GetString(configkey.OAuth2AccessTokenPath)
+		host := viper.GetString(keys.OAuth2HostName)
+		tokenPath := viper.GetString(keys.OAuth2AccessTokenPath)
 
 		tokenAccessURL := url.URL{
 			Scheme: scheme,
@@ -121,11 +121,11 @@ func VerifyKeycloakTokenWithAuth(a *ginkeycloak.Auth) func(authorizationToken st
 	}
 }
 
-//nolint
+// nolint
 // Deprecated: VerifyStaticClientToken verifies that a static token provided in the Authorization header if valid
 func VerifyStaticClientToken(authorizationToken string, wb web.Service) (datastore.User, error) {
 	if authorizationToken != "" {
-		staticClientToken := viper.GetString(configkey.StaticClientToken)
+		staticClientToken := viper.GetString(keys.StaticClientToken)
 		if len(staticClientToken) > 0 {
 			if authorizationToken == staticClientToken {
 				// we expect the static-client to exist before it is used

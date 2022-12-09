@@ -21,13 +21,13 @@ package web
 
 import (
 	"errors"
+	"github.com/everactive/dmscore/config/keys"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/web/usso"
 	"github.com/gin-gonic/gin"
@@ -44,7 +44,7 @@ var VerifyTokenAndUser = func(authorizationToken string, wb Service) (datastore.
 
 func (wb Service) checkPermissionsAndGetUserFromJWT(c *gin.Context, minimumAuthorizedRole int) (datastore.User, error) {
 	authType := c.GetHeader("Auth-Type")
-	authProvider := strings.ToLower(viper.GetString(configkey.AuthProvider))
+	authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))
 	log.Tracef("Auth provider: %s, Auth-Type: %s", authProvider, authType)
 
 	if (authProvider == "static-client" || authProvider == "keycloak") && (authType == "static-client" || authType == "keycloak") {

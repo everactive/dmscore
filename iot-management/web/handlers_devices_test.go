@@ -20,13 +20,13 @@
 package web
 
 import (
+	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
 	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/crypt"
 	"github.com/spf13/viper"
 )
@@ -40,10 +40,10 @@ func TestService_DeviceHandlers(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/abc/devices", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/abc/devices", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/abc/devices", 0, http.StatusUnauthorized, "UserAuth"},
 
 		{"valid", "/v1/abc/devices/a111", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/abc/devices/a111", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/abc/devices/a111", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,7 +52,7 @@ func TestService_DeviceHandlers(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			manageMock.On("DeviceList", mock.Anything, mock.Anything, mock.Anything).Return(web.DevicesResponse{})
@@ -84,7 +84,7 @@ func TestService_ActionListHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/abc/devices/a111/actions", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/abc/devices/a111/actions", 0, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/abc/devices/a111/actions", 0, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -93,7 +93,7 @@ func TestService_ActionListHandler(t *testing.T) {
 				t.Fatalf("Error generating JWT secret: %s", err)
 				return
 			}
-			viper.Set(configkey.JwtSecret, secret)
+			viper.Set(keys.JwtSecret, secret)
 
 			manageMock := &mocks.Manage{}
 			manageMock.On("ActionList", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(web.ActionsResponse{})

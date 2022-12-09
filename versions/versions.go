@@ -2,12 +2,12 @@
 package versions
 
 import (
+	"github.com/everactive/dmscore/config/keys"
 	"io/ioutil"
 	"os"
 	"path"
 	"time"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -29,7 +29,7 @@ var lastVersionTime time.Time
 
 // GetComponentVersions gets the component versions from disk or returns a cached copy that has a configurable duration
 func GetComponentVersions() map[string]string {
-	cacheDuration := viper.GetDuration(configkey.ComponentVersionsCacheDuration)
+	cacheDuration := viper.GetDuration(keys.ComponentVersionsCacheDuration)
 	if cachedVersions == nil || lastVersionTime.Add(cacheDuration).Before(time.Now()) {
 		log.Tracef("Cached versions expired or does not exist, creating/renewing")
 		lastVersionTime = time.Now()

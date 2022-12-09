@@ -20,12 +20,12 @@
 package factory
 
 import (
+	"github.com/everactive/dmscore/config/keys"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/spf13/viper"
 
-	"github.com/everactive/dmscore/iot-management/config"
+	"github.com/everactive/dmscore/config"
 )
 
 func TestCreateDataStore(t *testing.T) {
@@ -39,8 +39,8 @@ func TestCreateDataStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			config.LoadConfig("../../testing/memory.yaml")
 
-			driver := viper.GetString(configkey.DatabaseDriver)
-			datasource := viper.GetString(configkey.DatabaseConnectionString)
+			driver := viper.GetString(keys.DatabaseDriver)
+			datasource := viper.GetString(keys.DatabaseConnectionString)
 			_, err := CreateDataStore(driver, datasource)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateDataStore() error = %v, wantErr %v", err, tt.wantErr)

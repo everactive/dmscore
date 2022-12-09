@@ -83,7 +83,7 @@ func (wb Service) UserGetHandler(c *gin.Context) {
 	_ = encodeResponse(UserResponse{web.StandardResponse{}, user}, w)
 }
 
-//nolint
+// nolint
 // UserCreateHandler handles user creation
 func (wb Service) UserCreateHandler(c *gin.Context) {
 	w := c.Writer
@@ -99,27 +99,26 @@ func (wb Service) UserCreateHandler(c *gin.Context) {
 	switch {
 	// Check we have some data
 	case err == io.EOF:
-		w.WriteHeader(http.StatusBadRequest)
-		formatStandardResponse("UserAuth", "No user data supplied", c)
+		formatStandardResponseWithStatusCode("UserAuth", "No user data supplied", http.StatusBadRequest, c)
 		return
 	// Check for parsing errors
 	case err != nil:
 		w.WriteHeader(http.StatusBadRequest)
-		formatStandardResponse("UserAuth", err.Error(), c)
+		formatStandardResponseWithStatusCode("UserAuth", err.Error(), http.StatusBadRequest, c)
 		return
 	}
 
 	// Create the user
 	err = wb.Manage.CreateUser(user)
 	if err != nil {
-		formatStandardResponse("UserAuth", err.Error(), c)
+		formatStandardResponseWithStatusCode("UserAuth", err.Error(), http.StatusBadRequest, c)
 		return
 	}
 
 	formatStandardResponse("", "", c)
 }
 
-//nolint
+// nolint
 // UserUpdateHandler handles user update
 func (wb Service) UserUpdateHandler(c *gin.Context) {
 	w := c.Writer
@@ -135,13 +134,11 @@ func (wb Service) UserUpdateHandler(c *gin.Context) {
 	switch {
 	// Check we have some data
 	case err == io.EOF:
-		w.WriteHeader(http.StatusBadRequest)
-		formatStandardResponse("UserAuth", "No user data supplied", c)
+		formatStandardResponseWithStatusCode("UserAuth", "No user data supplied", http.StatusBadRequest, c)
 		return
 	// Check for parsing errors
 	case err != nil:
-		w.WriteHeader(http.StatusBadRequest)
-		formatStandardResponse("UserAuth", err.Error(), c)
+		formatStandardResponseWithStatusCode("UserAuth", err.Error(), http.StatusBadRequest, c)
 		return
 	}
 

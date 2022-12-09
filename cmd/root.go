@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
@@ -70,6 +71,8 @@ var runCommand = cobra.Command{
 
 		config.LoadConfig(configFilePath)
 
+		loadStoreIDs()
+
 		db, err := createManagementDatastore()
 
 		deviceTwinAPIURL := viper.GetString(keys.DeviceTwinAPIURL)
@@ -130,6 +133,27 @@ var runCommand = cobra.Command{
 
 		www.Run()
 	},
+}
+
+func loadStoreIDs() {
+	var modelStoreIds []struct {
+		Model   string `json:"model"`
+		StoreID string `json:"storeid"`
+	}
+	storeIDsString := viper.GetString(keys.StoreIDs)
+	log.Tracef("Store IDs string: %s", storeIDsString)
+	if storeIDsString != "" {
+		err := json.Unmarshal([]byte(storeIDsString), &modelStoreIds)
+		if err != nil {
+			log.Error(err)
+		}
+		for _, item := range modelStoreIds {
+			log.Tracef("For model %s, loading store id %s", item.Model, item.StoreID)
+			viper.Set(fmt.Sprintf(keys.ModelKeyTemplate, item.Model), item.StoreID)
+		}
+	} else {
+		log.Errorf("%s was empty or not set, could not load store ids", keys.StoreIDs)
+	}
 }
 
 func createManagementDatastore() (datastore.DataStore, error) {

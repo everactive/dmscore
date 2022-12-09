@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/everactive/dmscore/iot-management/config"
+	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/iot-management/datastore/memory"
 
 	"fmt"

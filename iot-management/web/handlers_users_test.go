@@ -49,7 +49,7 @@ func TestService_UserListHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/users", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/users", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestService_UserCreateHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users", 300, u1, http.StatusOK, ""},
 		{"invalid-user", "/v1/users", 300, u2, http.StatusBadRequest, "UserAuth"},
-		{"invalid-permissions", "/v1/users", 200, u1, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users", 200, u1, http.StatusUnauthorized, "UserAuth"},
 		{"invalid-empty", "/v1/users", 300, u3, http.StatusBadRequest, "UserAuth"},
 		{"invalid-data", "/v1/users", 300, u4, http.StatusBadRequest, "UserAuth"},
 	}
@@ -132,8 +132,8 @@ func TestService_UserGetHandler(t *testing.T) {
 		wantErr     string
 	}{
 		{"valid", "/v1/users/jamesj", 300, http.StatusOK, ""},
-		{"invalid-permissions", "/v1/users/jamesj", 200, http.StatusBadRequest, "UserAuth"},
-		{"invalid-user", "/v1/users/invalid", 300, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj", 200, http.StatusUnauthorized, "UserAuth"},
+		{"invalid-user", "/v1/users/invalid", 300, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -181,7 +181,7 @@ func TestService_UserUpdateHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users/jamesj", 300, u1, true, http.StatusOK, ""},
 		{"invalid-user", "/v1/users/invalid", 300, u2, true, http.StatusBadRequest, "UserUpdate"},
-		{"invalid-permissions", "/v1/users/jamesj", 200, u1, true, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj", 200, u1, true, http.StatusUnauthorized, "UserAuth"},
 		{"invalid-empty", "/v1/users/jamesj", 300, u3, false, http.StatusBadRequest, "UserAuth"},
 		{"invalid-data", "/v1/users/jamesj", 300, u4, false, http.StatusBadRequest, "UserAuth"},
 	}
@@ -244,7 +244,7 @@ func TestService_UserDeleteHandler(t *testing.T) {
 	}{
 		{"valid", "/v1/users/jamesj", 300, http.StatusOK, ""},
 		{"invalid-user", "/v1/users/invalid", 300, http.StatusBadRequest, "UserDelete"},
-		{"invalid-permissions", "/v1/users/jamesj", 200, http.StatusBadRequest, "UserAuth"},
+		{"invalid-permissions", "/v1/users/jamesj", 200, http.StatusUnauthorized, "UserAuth"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -22,10 +22,10 @@ package twinapi
 import (
 	"errors"
 	"fmt"
+	"github.com/everactive/dmscore/config/keys"
 	"path"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/spf13/viper"
@@ -61,7 +61,7 @@ func TestClientAdapter_GroupList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 
@@ -117,7 +117,7 @@ func TestClientAdapter_GroupDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 
@@ -171,7 +171,7 @@ func TestClientAdapter_GroupCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 
@@ -223,7 +223,7 @@ func TestClientAdapter_GroupExcludedDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 
@@ -278,7 +278,7 @@ func TestClientAdapter_GroupDeviceLink(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 
@@ -331,7 +331,7 @@ func TestClientAdapter_GroupDeviceUnlink(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(configkey.ClientTokenProvider, "disabled")
+			viper.Set(keys.ClientTokenProvider, "disabled")
 			client := resty.New()
 			httpmock.ActivateNonDefault(client.GetClient())
 			defer httpmock.DeactivateAndReset()

@@ -21,7 +21,7 @@
 package web
 
 import (
-	"github.com/everactive/dmscore/iot-management/config/configkey"
+	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/juju/usso"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +53,7 @@ func NewService(srv manage.Manage) *Service {
 
 // Run starts the web service
 func (wb Service) Run() {
-	servicePort := viper.GetString(configkey.ServicePort)
+	servicePort := viper.GetString(keys.ServicePort)
 	log.Info("Starting service on port : ", servicePort)
 
 	ssoServer = &usso.ProductionUbuntuSSOServer

@@ -21,11 +21,11 @@ package web
 
 import (
 	"errors"
+	"github.com/everactive/dmscore/config/keys"
 	"log"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/everactive/dmscore/iot-management/config/configkey"
 	"github.com/everactive/dmscore/iot-management/web/usso"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -45,7 +45,7 @@ func (wb Service) JWTCheck(c *gin.Context) (*jwt.Token, error) {
 	}
 
 	trimmedToken := strings.TrimPrefix(jwtToken, "Bearer ")
-	jwtSecret := viper.GetString(configkey.JwtSecret)
+	jwtSecret := viper.GetString(keys.JwtSecret)
 
 	// Verify the JWT string
 	token, err := usso.VerifyJWT(jwtSecret, trimmedToken)
