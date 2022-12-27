@@ -130,13 +130,6 @@ func (id IdentityService) DeviceUpdate(orgID, deviceID string, req *DeviceUpdate
 		return err
 	}
 
-	// Update the device data, if it has changed
-	//if device.DeviceData != req.DeviceData {
-	//	if err := id.DB.DeviceUpdate(deviceID, device.Status, req.DeviceData); err != nil {
-	//		return err
-	//	}
-	//}
-
 	if req.Status == int(models.StatusEnrolled) {
 		return fmt.Errorf("cannot change a device status to enrolled. The device itself needs to connect for this")
 	}

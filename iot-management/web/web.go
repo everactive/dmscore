@@ -45,9 +45,7 @@ type Service struct {
 }
 
 // NewService returns a new web controller
-func NewService(srv manage.Manage) *Service {
-	engine := gin.Default()
-
+func NewService(srv manage.Manage, engine *gin.Engine) *Service {
 	s := &Service{
 		Manage: srv,
 		engine: engine,

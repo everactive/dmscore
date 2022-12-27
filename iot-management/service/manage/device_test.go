@@ -22,15 +22,10 @@ package manage
 import (
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	mocks2 "github.com/everactive/dmscore/iot-devicetwin/service/controller/mocks"
-	"github.com/everactive/dmscore/iot-identity/service/mocks"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	mocks3 "github.com/everactive/dmscore/iot-management/datastore/mocks"
 	"github.com/stretchr/testify/mock"
 	"testing"
-
-	"github.com/everactive/dmscore/iot-management/identityapi"
-
-	"github.com/everactive/dmscore/iot-management/twinapi"
 )
 
 func TestManagement_DeviceList(t *testing.T) {
@@ -70,7 +65,14 @@ func TestManagement_DeviceList(t *testing.T) {
 
 			deviceTwinController.On("DeviceList", mock.Anything).Return(devices, nil)
 
-			srv := NewManagement(manageDataStore, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, &mocks.Identity{})
+			srv := Management{
+				DS:                   manageDataStore,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             nil,
+			}
 
 			got := srv.DeviceList(tt.args.orgID, tt.args.username, tt.args.role)
 			if got.Code != tt.wantErr {
@@ -113,7 +115,14 @@ func TestManagement_DeviceGet(t *testing.T) {
 		deviceTwinControllerMock.On("DeviceGet", mock.Anything, mock.Anything).Return(messages.Device{Serial: tt.wantSerial}, nil)
 
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinControllerMock, &mocks.Identity{})
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinControllerMock,
+				Identity:             nil,
+			}
 
 			got := srv.DeviceGet(tt.args.orgID, tt.args.username, tt.args.role, tt.args.deviceID)
 			if got.Code != tt.wantErr {
@@ -156,7 +165,14 @@ func TestManagement_DeviceLogs(t *testing.T) {
 
 			deviceTwinControllerMock.On("DeviceLogs", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinControllerMock, &mocks.Identity{})
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinControllerMock,
+				Identity:             nil,
+			}
 			got := srv.DeviceLogs(tt.args.orgID, tt.args.username, tt.args.role, tt.args.deviceID, &messages.DeviceLogs{})
 			if got.Code != tt.wantErr {
 				t.Errorf("Management.DeviceLogs() = %v, want %v", got.Code, tt.wantErr)
@@ -195,7 +211,15 @@ func TestManagement_DeviceUsersAction(t *testing.T) {
 
 			deviceTwinControllerMock.On("User", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinControllerMock, &mocks.Identity{})
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinControllerMock,
+				Identity:             nil,
+			}
+
 			got := srv.DeviceUsersAction(tt.args.orgID, tt.args.username, tt.args.role, tt.args.deviceID, messages.DeviceUser{})
 			if got.Code != tt.wantErr {
 				t.Errorf("Management.DeviceUsersAction() = %v, want %v", got.Code, tt.wantErr)

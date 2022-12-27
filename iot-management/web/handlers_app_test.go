@@ -20,7 +20,8 @@
 package web
 
 import (
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"testing"
 
@@ -41,7 +42,7 @@ func TestService_VersionTokenHandler(t *testing.T) {
 				return
 			}
 
-			wb := NewService(&mocks.Manage{})
+			wb := NewService(&manage.MockManage{}, gin.Default())
 			w := sendRequest("GET", "/v1/versions", nil, wb, "jamesj", secret, 100)
 			if w.Code != http.StatusOK {
 				t.Errorf("Expected HTTP status '%d', got: %v", http.StatusOK, w.Code)

@@ -7,10 +7,25 @@ tasks:
     desc: Installs the schema-generate tool
     cmds:
       - go install github.com/everactive/generate/...@v1.0.1
+  install-mockery:
+    desc: Installs the mockery mock generating tool
+    cmds:
+      - go install github.com/vektra/mockery/v2@v2.15.0
   run-tests:
     desc: Runs the unit tests, making sure everything is setup
     cmds:
+      - task: update-mocks
+      - task: generate-message-structs
       - go test ./...
+  update-mocks:
+    desc: Update mocks used by unit tests
+    cmds:
+      - mockery --dir iot-management/service/manage --all --inpackage
+  generate-message-structs:
+    desc: This will generate the Go structs from the schema definitions
+    cmds:
+      - mkdir -p pkg/messages
+      - schema-generate -o pkg/messages/messages.go -p messages ./schemas/rest.json
   create-migration:
     desc: Creates a dmscore database migration (this is for the primary "management" database)
     cmds:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/everactive/dmscore/iot-management/web"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/thejerf/suture/v4"
 	"gorm.io/gorm"
@@ -11,17 +12,30 @@ import (
 )
 
 type HandlerService struct {
+	manage    manage.Manage
+	legacyWeb *web.Service
+	engine    *gin.Engine
 	db        *gorm.DB
 }
 
 func New(srv manage.Manage, db *gorm.DB) *suture.Supervisor {
 	sup := suture.NewSimple("webhandlers")
 
-	legacyWeb := web.NewService(srv)
-        hs := &HandlerService{db}
+	engine := gin.Default()
 
-        sup.Add(hs)
+	engine.Use(gin.Logger())
+
+	legacyWeb := web.NewService(srv, engine)
+	hs := &HandlerService{srv, legacyWeb, engine, db}
+
+	sup.Add(hs)
 	sup.Add(legacyWeb)
+
+	group := engine.Group("/v1")
+	group.Use(web.AuthMiddleWare)
+	group.POST("/:orgid/models/:model/required", hs.AddRequiredModelSnap)
+	group.DELETE("/:orgid/models/:model/required", hs.DeleteRequiredModelSnap)
+	group.GET("/:orgid/models/:model/required", hs.RequiredModelSnaps)
 
 	return sup
 }

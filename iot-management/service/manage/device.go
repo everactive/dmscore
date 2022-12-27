@@ -26,7 +26,7 @@ import (
 )
 
 func getUserOrgIDIfOrgName(srv *Management, username, orgID string) (string, error) {
-	userOrganizations, err := srv.DB.OrganizationsForUser(username)
+	userOrganizations, err := srv.DS.OrganizationsForUser(username)
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +55,7 @@ func (srv *Management) DeviceList(orgID, username string, role int) web.DevicesR
 
 	orgID = newOrgID
 
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.DevicesResponse{
 			StandardResponse: web.StandardResponse{
@@ -95,7 +95,7 @@ func (srv *Management) DeviceGet(orgID, username string, role int, deviceID stri
 
 	orgID = newOrgID
 
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.DeviceResponse{
 			StandardResponse: web.StandardResponse{
@@ -133,7 +133,7 @@ func (srv *Management) DeviceDelete(orgID, username string, role int, deviceID s
 
 	orgID = newOrgID
 
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "DeviceAuth",
@@ -169,7 +169,7 @@ func (srv *Management) DeviceLogs(orgID, username string, role int, deviceID str
 
 	orgID = newOrgID
 
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "DeviceAuth",
@@ -200,7 +200,7 @@ func (srv *Management) DeviceUsersAction(orgID, username string, role int, devic
 
 	orgID = newOrgID
 
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "DeviceAuth",

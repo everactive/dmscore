@@ -35,7 +35,7 @@ func (srv *Management) ActionList(orgID, username string, role int, deviceID str
 
 	orgID = newOrgID
 
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.ActionsResponse{
 			StandardResponse: web.StandardResponse{

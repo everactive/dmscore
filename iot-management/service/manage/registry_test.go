@@ -21,7 +21,6 @@ package manage
 
 import (
 	"errors"
-	mocks2 "github.com/everactive/dmscore/iot-devicetwin/service/controller/mocks"
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/everactive/dmscore/iot-identity/service/mocks"
 	mocks4 "github.com/everactive/dmscore/iot-management/datastore/mocks"
@@ -29,8 +28,6 @@ import (
 	"testing"
 
 	"github.com/everactive/dmscore/iot-management/datastore/memory"
-	"github.com/everactive/dmscore/iot-management/identityapi"
-	"github.com/everactive/dmscore/iot-management/twinapi"
 )
 
 func TestManagement_RegDeviceList(t *testing.T) {
@@ -62,7 +59,14 @@ func TestManagement_RegDeviceList(t *testing.T) {
 			identityMock.On("DeviceList", mock.Anything).Return([]domain.Enrollment{}, nil)
 
 			//OrgUserAccess(orgID, username string, role int) bool
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, identityMock)
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             identityMock,
+			}
 			resp := srv.RegDeviceList(tt.args.orgID, tt.args.username, tt.args.role)
 			if (len(resp.Code) > 0) != tt.wantErr {
 				t.Errorf("Management.RegDeviceList() error = %v, wantErr %v", resp.Code, tt.wantErr)
@@ -101,7 +105,14 @@ func TestManagement_RegisterDevice(t *testing.T) {
 
 			identityMock.On("RegisterDevice", mock.Anything, mock.Anything).Return("", nil)
 
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, identityMock)
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             identityMock,
+			}
 			got := srv.RegisterDevice(tt.args.orgID, tt.args.username, tt.args.role, tt.args.body)
 			if got.Code != tt.want {
 				t.Errorf("Management.RegisterDevice() = %v, want %v", got.Code, tt.want)
@@ -136,7 +147,14 @@ func TestManagement_RegDeviceGet(t *testing.T) {
 
 			identityMock.On("DeviceGet", mock.Anything, mock.Anything).Return(&domain.Enrollment{}, nil)
 
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, identityMock)
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             identityMock,
+			}
 			got := srv.RegDeviceGet(tt.args.orgID, tt.args.username, tt.args.role, tt.args.deviceID)
 			if got.Code != tt.want {
 				t.Errorf("Management.RegDeviceGet() = %v, want %v", got.Code, tt.want)
@@ -166,7 +184,14 @@ func TestManagement_RegDeviceUpdate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			identityMock := &mocks.Identity{}
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, identityMock)
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             identityMock,
+			}
 
 			switch tt.name {
 			case "valid":

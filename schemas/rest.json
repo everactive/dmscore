@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Schema definitions for the REST API",
+  "description": "The schema definitions for the messages passed between the agent and the device twin service",
+  "definitions": {
+    "modelRequiredSnap": {
+      "type": "object",
+      "properties": {
+        "snap": {
+          "description": "A snap that is required for a given model",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

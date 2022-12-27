@@ -60,7 +60,6 @@ func sendEnrollRequest(method, url string, data io.Reader, srv *IdentityService)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(method, url, data)
 
-	// engine.ServeHTTP(w, req)
 	srv.enrollRouter.ServeHTTP(w, req)
 
 	return w

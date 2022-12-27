@@ -23,7 +23,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"path"
 	"testing"
@@ -48,8 +49,8 @@ func TestService_SnapListHandler(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("SnapList", tt.orgID, tt.username, tt.permissions, tt.deviceID).Return(web.SnapsResponse{})
 
@@ -90,8 +91,8 @@ func TestService_SnapWorkflow_SnapListOnDevice(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("SnapListOnDevice", tt.orgID, tt.username, tt.permissions, tt.deviceID).Return(web.StandardResponse{})
 
@@ -133,8 +134,8 @@ func TestService_SnapWorkflow_SnapInstall(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("SnapInstall", tt.orgID, tt.username, tt.permissions, tt.deviceID, tt.snap).Return(web.StandardResponse{})
 
@@ -177,8 +178,8 @@ func TestService_SnapWorkflow_SnapDelete(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("SnapRemove", orgID, username, tt.permissions, deviceID, snap).Return(web.StandardResponse{})
 
@@ -225,8 +226,8 @@ func TestService_SnapWorkflow_SnapUpdate(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			_, action := path.Split(tt.url)
 			body := tt.body
@@ -274,8 +275,8 @@ func TestService_SnapWorkflow_SnapConfigUpdate(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			body := tt.body
 			if body == nil {
@@ -323,8 +324,8 @@ func TestService_SnapWorkflow_SnapSnapshot(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("SnapSnapshot", orgID, username, tt.permissions, deviceID, snap, tt.body).Return(web.StandardResponse{})
 

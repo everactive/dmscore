@@ -21,16 +21,12 @@ package manage
 
 import (
 	"errors"
-	mocks2 "github.com/everactive/dmscore/iot-devicetwin/service/controller/mocks"
 	"github.com/everactive/dmscore/iot-identity/service/mocks"
 	"github.com/stretchr/testify/mock"
 	"testing"
 
-	"github.com/everactive/dmscore/iot-management/identityapi"
-
 	"github.com/everactive/dmscore/iot-management/datastore/memory"
 	"github.com/everactive/dmscore/iot-management/domain"
-	"github.com/everactive/dmscore/iot-management/twinapi"
 )
 
 func TestManagement_OrganizationsForUser(t *testing.T) {
@@ -49,7 +45,14 @@ func TestManagement_OrganizationsForUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			got, err := srv.OrganizationsForUser(tt.args.username)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Management.OrganizationsForUser() error = %v, wantErr %v", err, tt.wantErr)
@@ -76,7 +79,14 @@ func TestManagement_OrganizationGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			got, err := srv.OrganizationGet(tt.args.orgID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Management.OrganizationGet() error = %v, wantErr %v", err, tt.wantErr)
@@ -112,7 +122,14 @@ func TestManagement_OrganizationCreate(t *testing.T) {
 			}
 			identityMock.On("RegisterOrganization", mock.Anything).Return("", returnErr)
 
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, identityMock)
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             identityMock,
+			}
 			if err := srv.OrganizationCreate(tt.args.org); (err != nil) != tt.wantErr {
 				t.Errorf("Management.OrganizationCreate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -133,7 +150,14 @@ func TestManagement_OrganizationUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			if err := srv.OrganizationUpdate(tt.args.org); (err != nil) != tt.wantErr {
 				t.Errorf("Management.OrganizationUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -155,7 +179,14 @@ func TestManagement_OrganizationForUserToggle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			if err := srv.OrganizationForUserToggle(tt.args.orgID, tt.args.username); (err != nil) != tt.wantErr {
 				t.Errorf("Management.OrganizationForUserToggle() error = %v, wantErr %v", err, tt.wantErr)
 			}

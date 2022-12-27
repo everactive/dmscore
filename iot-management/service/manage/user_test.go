@@ -20,15 +20,10 @@
 package manage
 
 import (
-	mocks2 "github.com/everactive/dmscore/iot-devicetwin/service/controller/mocks"
-	"github.com/everactive/dmscore/iot-identity/service/mocks"
 	"testing"
-
-	"github.com/everactive/dmscore/iot-management/identityapi"
 
 	"github.com/everactive/dmscore/iot-management/datastore/memory"
 	"github.com/everactive/dmscore/iot-management/domain"
-	"github.com/everactive/dmscore/iot-management/twinapi"
 )
 
 func TestManagement_UserWorkflow(t *testing.T) {
@@ -47,7 +42,14 @@ func TestManagement_UserWorkflow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			got, err := srv.GetUser(tt.args.username)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Management.GetUser() error = %v, wantErr %v", err, tt.wantErr)
@@ -82,7 +84,14 @@ func TestManagement_OpenIDNonceStore(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			got := srv.OpenIDNonceStore()
 			if (got == nil) != tt.wantErr {
 				t.Errorf("Management.OpenIDNonceStore() = %v, want %v", got, tt.wantErr)
@@ -105,7 +114,14 @@ func TestManagement_CreateUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			if err := srv.CreateUser(tt.args.user); (err != nil) != tt.wantErr {
 				t.Errorf("Management.CreateUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -127,7 +143,14 @@ func TestManagement_UserUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			if err := srv.UserUpdate(tt.args.user); (err != nil) != tt.wantErr {
 				t.Errorf("Management.UserUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -148,7 +171,14 @@ func TestManagement_UserDelete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewManagement(memory.NewStore(), &twinapi.MockClient{}, &identityapi.MockIdentity{}, &mocks2.Controller{}, &mocks.Identity{})
+			srv := Management{
+				DS:                   memory.NewStore(),
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: nil,
+				Identity:             nil,
+			}
 			if err := srv.UserDelete(tt.args.username); (err != nil) != tt.wantErr {
 				t.Errorf("Management.UserDelete() error = %v, wantErr %v", err, tt.wantErr)
 			}

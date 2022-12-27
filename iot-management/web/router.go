@@ -33,7 +33,7 @@ func (wb Service) authMiddleWare() gin.HandlerFunc {
 		user, err := wb.checkIsStandardAndGetUserFromJWT(ctx)
 		if err != nil {
 			log.Error(err)
-			response := api.StandardResponse{Code: "UserAuth", Message: ""}
+			response := api.StandardResponse{Code: "UserAuth", Message: err.Error()}
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, &response)
 			return
 		}
