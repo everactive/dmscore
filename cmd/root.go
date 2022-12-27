@@ -27,6 +27,7 @@ import (
 	"github.com/everactive/dmscore/iot-management/twinapi"
 	"github.com/everactive/dmscore/iot-management/web"
 	migrate2 "github.com/everactive/dmscore/pkg/migrate"
+	web2 "github.com/everactive/dmscore/pkg/web"
 	"github.com/everactive/ginkeycloak"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -134,14 +135,10 @@ var runCommand = cobra.Command{
 			}
 		}
 
-		// Start the web service
-		www := web.NewService(srv)
-
-		// Start the web service
 		supervisorSpec := suture.Spec{}
 		sup := suture.New("dmscore", supervisorSpec)
 
-		sup.Add(www)
+		sup.Add(web2.New(srv))
 
 		ctx := context.Background()
 		ctx, cancelCtx := context.WithCancel(ctx)
