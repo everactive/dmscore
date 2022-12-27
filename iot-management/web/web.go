@@ -21,6 +21,7 @@
 package web
 
 import (
+	"context"
 	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/juju/usso"
@@ -52,7 +53,7 @@ func NewService(srv manage.Manage) *Service {
 }
 
 // Run starts the web service
-func (wb Service) Run() {
+func (wb Service) Serve(ctx context.Context) error {
 	servicePort := viper.GetString(keys.ServicePort)
 	log.Info("Starting service on port : ", servicePort)
 
@@ -64,8 +65,12 @@ func (wb Service) Run() {
 
 	wb.router(r)
 
-	err := r.Run(":" + servicePort)
-	if err != nil {
-		panic(err)
-	}
+	var err error
+	go func() {
+		err = r.Run(":" + servicePort)
+	}()
+
+	<-ctx.Done()
+
+	return err
 }

@@ -19,6 +19,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/stretchr/testify v1.7.1
+	github.com/thejerf/suture/v4 v4.0.2
 	gopkg.in/errgo.v1 v1.0.1
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/gorm v1.22.4

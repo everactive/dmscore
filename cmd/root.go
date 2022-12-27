@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
@@ -32,13 +34,17 @@ import (
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 
 	// this is needed for migrate
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	// this is needed for migrate
 	_ "github.com/lib/pq"
+
+	"github.com/thejerf/suture/v4"
 )
 
 func init() {
@@ -61,7 +67,7 @@ var runCommand = cobra.Command{
 	Use:   "run",
 	Short: "run",
 	Long:  "run",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.SetLevel(log.TraceLevel)
 
 		var configFilePath string
@@ -131,7 +137,37 @@ var runCommand = cobra.Command{
 		// Start the web service
 		www := web.NewService(srv)
 
-		www.Run()
+		// Start the web service
+		supervisorSpec := suture.Spec{}
+		sup := suture.New("dmscore", supervisorSpec)
+
+		sup.Add(www)
+
+		ctx := context.Background()
+		ctx, cancelCtx := context.WithCancel(ctx)
+
+		err = <-sup.ServeBackground(ctx)
+		if err != nil && !errors.Is(err, context.Canceled) {
+			log.Errorf("Well, this isn't good, we existed with an error and we were not canceled: %s", err)
+		} else {
+			log.Infof("Context was canceled, exiting")
+		}
+
+		quitSignals := make(chan os.Signal, 1)
+		signal.Notify(quitSignals, syscall.SIGINT, syscall.SIGTERM)
+
+		interruptSignal := <-quitSignals
+
+		cancelCtx()
+
+		// SIGINT is expected from systemd and should not result in an error exit
+		if interruptSignal == syscall.SIGINT || interruptSignal == syscall.SIGTERM {
+			// We expect this signal, it is not an error
+			log.Infof("Caught SIGINT or SIGTERM, exiting...")
+			return nil
+		}
+
+		return fmt.Errorf("caught signal: %v, %d", interruptSignal, interruptSignal)
 	},
 }
 
