@@ -28,7 +28,7 @@ import (
 
 // OrganizationsForUser fetches the organizations for a user
 func (srv *Management) OrganizationsForUser(username string) ([]domain.Organization, error) {
-	orgs, err := srv.DB.OrganizationsForUser(username)
+	orgs, err := srv.DS.OrganizationsForUser(username)
 	if err != nil {
 		return nil, err
 	}
@@ -45,12 +45,12 @@ func (srv *Management) OrganizationsForUser(username string) ([]domain.Organizat
 
 // OrganizationForUserToggle toggles organization access for a user
 func (srv *Management) OrganizationForUserToggle(orgID, username string) error {
-	return srv.DB.OrganizationForUserToggle(orgID, username)
+	return srv.DS.OrganizationForUserToggle(orgID, username)
 }
 
 // OrganizationGet fetches an organization
 func (srv *Management) OrganizationGet(orgID string) (domain.Organization, error) {
-	org, err := srv.DB.OrganizationGet(orgID)
+	org, err := srv.DS.OrganizationGet(orgID)
 	if err != nil {
 		return domain.Organization{}, err
 	}
@@ -75,7 +75,7 @@ func (srv *Management) OrganizationCreate(org domain.OrganizationCreate) error {
 		OrganizationID: organizationID,
 		Name:           org.Name,
 	}
-	return srv.DB.OrganizationCreate(o)
+	return srv.DS.OrganizationCreate(o)
 }
 
 // OrganizationUpdate updates an organization
@@ -85,5 +85,5 @@ func (srv *Management) OrganizationUpdate(org domain.Organization) error {
 		Name:           org.Name,
 	}
 
-	return srv.DB.OrganizationUpdate(o)
+	return srv.DS.OrganizationUpdate(o)
 }

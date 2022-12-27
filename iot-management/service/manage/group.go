@@ -23,7 +23,7 @@ import "github.com/everactive/dmscore/iot-devicetwin/web"
 
 // GroupList lists the device groups
 func (srv *Management) GroupList(orgID, username string, role int) web.GroupsResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.GroupsResponse{
 			StandardResponse: web.StandardResponse{
@@ -38,7 +38,7 @@ func (srv *Management) GroupList(orgID, username string, role int) web.GroupsRes
 
 // GroupCreate creates a device group
 func (srv *Management) GroupCreate(orgID, username string, role int, body []byte) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "GroupAuth",
@@ -51,7 +51,7 @@ func (srv *Management) GroupCreate(orgID, username string, role int, body []byte
 
 // GroupDevices lists the devices for a groups
 func (srv *Management) GroupDevices(orgID, username string, role int, name string) web.DevicesResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.DevicesResponse{
 			StandardResponse: web.StandardResponse{
@@ -66,7 +66,7 @@ func (srv *Management) GroupDevices(orgID, username string, role int, name strin
 
 // GroupExcludedDevices lists the devices for a groups
 func (srv *Management) GroupExcludedDevices(orgID, username string, role int, name string) web.DevicesResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.DevicesResponse{
 			StandardResponse: web.StandardResponse{
@@ -81,7 +81,7 @@ func (srv *Management) GroupExcludedDevices(orgID, username string, role int, na
 
 // GroupDeviceLink links a device to a group
 func (srv *Management) GroupDeviceLink(orgID, username string, role int, name, deviceID string) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "GroupAuth",
@@ -94,7 +94,7 @@ func (srv *Management) GroupDeviceLink(orgID, username string, role int, name, d
 
 // GroupDeviceUnlink unlinks a device from a group
 func (srv *Management) GroupDeviceUnlink(orgID, username string, role int, name, deviceID string) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "GroupAuth",

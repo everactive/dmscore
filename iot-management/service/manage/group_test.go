@@ -44,7 +44,7 @@ func TestManagement_GroupList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &Management{
-				DB:      memory.NewStore(),
+				DS:      memory.NewStore(),
 				TwinAPI: &twinapi.MockClient{},
 			}
 			got := srv.GroupList(tt.args.orgID, tt.args.username, tt.args.role)
@@ -77,7 +77,7 @@ func TestManagement_GroupCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &Management{
-				DB:      memory.NewStore(),
+				DS:      memory.NewStore(),
 				TwinAPI: &twinapi.MockClient{},
 			}
 			got := srv.GroupCreate(tt.args.orgID, tt.args.username, tt.args.role, tt.args.body)
@@ -110,7 +110,7 @@ func TestManagement_GroupDevices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &Management{
-				DB:      memory.NewStore(),
+				DS:      memory.NewStore(),
 				TwinAPI: &twinapi.MockClient{},
 			}
 			got := srv.GroupDevices(tt.args.orgID, tt.args.username, tt.args.role, tt.args.name)
@@ -143,7 +143,7 @@ func TestManagement_GroupExcludedDevices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &Management{
-				DB:      memory.NewStore(),
+				DS:      memory.NewStore(),
 				TwinAPI: &twinapi.MockClient{},
 			}
 			got := srv.GroupExcludedDevices(tt.args.orgID, tt.args.username, tt.args.role, tt.args.name)
@@ -176,7 +176,7 @@ func TestManagement_GroupDeviceLink(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &Management{
-				DB:      memory.NewStore(),
+				DS:      memory.NewStore(),
 				TwinAPI: &twinapi.MockClient{},
 			}
 			got := srv.GroupDeviceLink(tt.args.orgID, tt.args.username, tt.args.role, tt.args.name, tt.args.deviceID)
@@ -209,7 +209,7 @@ func TestManagement_GroupDeviceUnlink(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &Management{
-				DB:      memory.NewStore(),
+				DS:      memory.NewStore(),
 				TwinAPI: &twinapi.MockClient{},
 			}
 			got := srv.GroupDeviceUnlink(tt.args.orgID, tt.args.username, tt.args.role, tt.args.name, tt.args.deviceID)

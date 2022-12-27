@@ -27,7 +27,7 @@ import (
 
 // RegDeviceList gets the registered devices a user can access for an organization
 func (srv *Management) RegDeviceList(orgID, username string, role int) web.DevicesResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.DevicesResponse{
 			StandardResponse: web.StandardResponse{
@@ -54,7 +54,7 @@ func (srv *Management) RegDeviceList(orgID, username string, role int) web.Devic
 
 // RegisterDevice registers a new device
 func (srv *Management) RegisterDevice(orgID, username string, role int, body []byte) web.RegisterResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.RegisterResponse{
 			StandardResponse: web.StandardResponse{
@@ -92,7 +92,7 @@ func (srv *Management) RegisterDevice(orgID, username string, role int, body []b
 
 // RegDeviceGet fetches a device registration
 func (srv *Management) RegDeviceGet(orgID, username string, role int, deviceID string) web.EnrollResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.EnrollResponse{
 			StandardResponse: web.StandardResponse{
@@ -120,7 +120,7 @@ func (srv *Management) RegDeviceGet(orgID, username string, role int, deviceID s
 
 // RegDeviceUpdate updates a device registration
 func (srv *Management) RegDeviceUpdate(orgID, username string, role int, deviceID string, body []byte) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "RegDeviceAuth",

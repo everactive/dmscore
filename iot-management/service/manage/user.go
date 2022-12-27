@@ -27,12 +27,12 @@ import (
 
 // OpenIDNonceStore fetches the OpenID nonce store
 func (srv *Management) OpenIDNonceStore() openid.NonceStore {
-	return srv.DB.OpenIDNonceStore()
+	return srv.DS.OpenIDNonceStore()
 }
 
 // GetUser fetches a user from the database
 func (srv *Management) GetUser(username string) (domain.User, error) {
-	u, err := srv.DB.GetUser(username)
+	u, err := srv.DS.GetUser(username)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -48,7 +48,7 @@ func (srv *Management) GetUser(username string) (domain.User, error) {
 
 // UserList fetches the existing users
 func (srv *Management) UserList() ([]domain.User, error) {
-	users, err := srv.DB.UserList()
+	users, err := srv.DS.UserList()
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (srv *Management) CreateUser(user domain.User) error {
 		Role:     user.Role,
 	}
 
-	_, err := srv.DB.CreateUser(u)
+	_, err := srv.DS.CreateUser(u)
 	return err
 }
 
@@ -90,10 +90,10 @@ func (srv *Management) UserUpdate(user domain.User) error {
 		Role:     user.Role,
 	}
 
-	return srv.DB.UserUpdate(u)
+	return srv.DS.UserUpdate(u)
 }
 
 // UserDelete removes a user
 func (srv *Management) UserDelete(username string) error {
-	return srv.DB.UserDelete(username)
+	return srv.DS.UserDelete(username)
 }

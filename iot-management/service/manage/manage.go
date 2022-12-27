@@ -79,8 +79,8 @@ type Manage interface {
 
 // Management implementation of the management service use cases
 type Management struct {
-	DB                   datastore.DataStore
-	TwinAPI              twinapi.Client
+	DS      datastore.DataStore
+	TwinAPI twinapi.Client
 	IdentityAPI          identityapi.Client
 	DeviceTwinController controller.Controller
 	Identity             service.Identity
@@ -89,7 +89,7 @@ type Management struct {
 // NewManagement creates an implementation of the management use cases
 func NewManagement(db datastore.DataStore, api twinapi.Client, id identityapi.Client, dtc controller.Controller, ids service.Identity) *Management {
 	return &Management{
-		DB:                   db,
+		DS:                   db,
 		TwinAPI:              api,
 		IdentityAPI:          id,
 		DeviceTwinController: dtc,

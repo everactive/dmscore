@@ -28,7 +28,7 @@ import (
 
 // SnapList lists the snaps for a device
 func (srv *Management) SnapList(orgID, username string, role int, deviceID string) web.SnapsResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.SnapsResponse{
 			StandardResponse: web.StandardResponse{
@@ -76,7 +76,7 @@ func (srv *Management) verifyOrgMatches(orgID string, deviceID string) (error, w
 
 // SnapListOnDevice lists snaps on a device
 func (srv *Management) SnapListOnDevice(orgID, username string, role int, deviceID string) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
@@ -102,7 +102,7 @@ func (srv *Management) SnapListOnDevice(orgID, username string, role int, device
 
 // SnapInstall installs a snap on a device
 func (srv *Management) SnapInstall(orgID, username string, role int, deviceID, snap string) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
@@ -123,7 +123,7 @@ func (srv *Management) SnapInstall(orgID, username string, role int, deviceID, s
 
 // SnapRemove uninstalls a snap on a device
 func (srv *Management) SnapRemove(orgID, username string, role int, deviceID, snap string) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
@@ -144,7 +144,7 @@ func (srv *Management) SnapRemove(orgID, username string, role int, deviceID, sn
 
 // SnapUpdate enables/disables/refreshes/swtich a snap on a device
 func (srv *Management) SnapUpdate(orgID, username string, role int, deviceID, snap, action string, body []byte) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
@@ -168,7 +168,7 @@ func (srv *Management) SnapUpdate(orgID, username string, role int, deviceID, sn
 
 // SnapConfigSet updates a snap config on a device
 func (srv *Management) SnapConfigSet(orgID, username string, role int, deviceID, snap string, config []byte) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
@@ -189,7 +189,7 @@ func (srv *Management) SnapConfigSet(orgID, username string, role int, deviceID,
 
 // SnapServiceAction requests from the DeviceTwin API that an action be performed on a snap service
 func (srv *Management) SnapServiceAction(orgID, username string, role int, deviceID, snap, action string, body []byte) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
@@ -219,7 +219,7 @@ func (srv *Management) SnapServiceAction(orgID, username string, role int, devic
 
 // SnapSnapshot requests from the DeviceTwin API that a snapshot be made of a given snap
 func (srv *Management) SnapSnapshot(orgID, username string, role int, deviceID, snap string, body []byte) web.StandardResponse {
-	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {
 		return web.StandardResponse{
 			Code:    "SnapAuth",
