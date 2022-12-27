@@ -14,7 +14,6 @@ import (
 	devicetwinweb "github.com/everactive/dmscore/iot-devicetwin/web"
 	"github.com/everactive/dmscore/iot-identity/config/configkey"
 	identitydatastore "github.com/everactive/dmscore/iot-identity/datastore"
-	"github.com/everactive/dmscore/iot-identity/middleware/logger"
 	"github.com/everactive/dmscore/iot-identity/service"
 	"github.com/everactive/dmscore/iot-identity/service/cert"
 	identityfactory "github.com/everactive/dmscore/iot-identity/service/factory"
@@ -29,7 +28,6 @@ import (
 	migrate2 "github.com/everactive/dmscore/pkg/migrate"
 	web2 "github.com/everactive/dmscore/pkg/web"
 	"github.com/everactive/ginkeycloak"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -143,6 +141,7 @@ var runCommand = cobra.Command{
 		supervisorSpec := suture.Spec{}
 		sup := suture.New("dmscore", supervisorSpec)
 
+		sup.Add(ids)
 		sup.Add(web2.New(srv, db))
 
 		ctx := context.Background()
@@ -324,36 +323,6 @@ func createIdentityService() *identityweb.IdentityService {
 	// Start the web service
 	identityweb.Logger = log.StandardLogger()
 	wb := identityweb.NewIdentityService(srv, log.StandardLogger())
-
-	enrollPort := viper.GetString(keys.GetIdentityKey(keys.ServicePortEnroll))
-
-	log.Info("Starting service (enroll) on port : ", enrollPort)
-
-	// internalRouter := gin.New()
-	enrollRouter := gin.New()
-
-	logFormat := os.Getenv("LOG_FORMAT")
-	if strings.ToUpper(logFormat) == "JSON" {
-		log.Infof("Setting up JSON log format for logger middleware")
-
-		middlewareLogger := logger.New(log.StandardLogger(), logger.LogOptions{EnableStarting: true})
-
-		enrollRouter.Use(middlewareLogger.HandleFunc)
-
-	} else {
-		enrollRouter.Use(gin.Logger())
-	}
-
-	wb.SetRouter(enrollRouter)
-
-	go func() {
-		log.Info("Listening and serving enroll on :" + enrollPort)
-
-		err = enrollRouter.Run(":" + enrollPort)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
 
 	return wb
 }

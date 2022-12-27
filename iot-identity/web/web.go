@@ -21,8 +21,15 @@
 package web
 
 import (
+	"context"
+	"github.com/everactive/dmscore/config/keys"
+	"github.com/everactive/dmscore/iot-identity/middleware/logger"
 	"github.com/everactive/dmscore/iot-identity/service"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"os"
+	"strings"
 )
 
 // Logger is a logger specific to the web package and can be swapped out
