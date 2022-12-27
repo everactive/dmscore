@@ -30,6 +30,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -42,6 +44,7 @@ import (
 	// this is needed for migrate
 	_ "github.com/lib/pq"
 
+	web2 "github.com/everactive/dmscore/pkg/web"
 	"github.com/thejerf/suture/v4"
 )
 
@@ -77,7 +80,7 @@ var runCommand = cobra.Command{
 
 		loadStoreIDs()
 
-		db, err := createManagementDatastore()
+		db, ds, err := createManagementDatastore()
 
 		deviceTwinAPIURL := viper.GetString(keys.DeviceTwinAPIURL)
 		// Initialize the device twin client
@@ -95,10 +98,10 @@ var runCommand = cobra.Command{
 
 		ids := createIdentityService()
 
-		dts := createDeviceTwinService(db)
+		dts := createDeviceTwinService(ds)
 
 		// Create the main services
-		srv := manage.NewManagement(db, twinAPI, identityAPI, dts.Controller, ids.Identity)
+		srv := manage.NewManagement(ds, twinAPI, identityAPI, dts.Controller, ids.Identity)
 
 		// Figure out what our auth provider is (keycloak or legacy static client token)
 		authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))
@@ -115,7 +118,7 @@ var runCommand = cobra.Command{
 			if authProvider == "static-client" {
 				staticClientToken := viper.GetString(keys.StaticClientToken)
 				if staticClientToken != "" {
-					auth.CreateServiceClientUser(db, "static-client")
+					auth.CreateServiceClientUser(ds, "static-client")
 					web.VerifyTokenAndUser = auth.VerifyStaticClientToken //nolint
 				}
 			} else if authProvider == "keycloak" {
@@ -133,14 +136,11 @@ var runCommand = cobra.Command{
 		}
 
 		// Start the web service
-		www := web.NewService(srv)
-
-		// Start the web service
 		supervisorSpec := suture.Spec{}
 		sup := suture.New("dmscore", supervisorSpec)
 
 		sup.Add(ids)
-		sup.Add(www)
+		sup.Add(web2.New(srv, db))
 
 		ctx := context.Background()
 		ctx, cancelCtx := context.WithCancel(ctx)
@@ -191,18 +191,36 @@ func loadStoreIDs() {
 	}
 }
 
-func createManagementDatastore() (datastore.DataStore, error) {
+func createManagementDatastore() (*gorm.DB, datastore.DataStore, error) {
 	// Open the connection to the local database
 	databaseDriver := viper.GetString(keys.DatabaseDriver)
 	dataSource := viper.GetString(keys.DatabaseConnectionString)
 	log.Infof("Connecting to %s with connection string %s", databaseDriver, dataSource)
-	db, err := factory.CreateDataStore(databaseDriver, dataSource)
-	if err != nil || db == nil {
-		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataSource)
-		return nil, err
+
+	// Create gorm database to use with the datastore
+	// Open the database connection
+	db, err := gorm.Open(postgres.Open(dataSource), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Error opening the database: %v\n", err)
 	}
 
-	return db, err
+	// Check that we have a valid database connection
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Error accessing the database: %v\n", err)
+	}
+	err = sqlDB.Ping()
+	if err != nil {
+		log.Fatalf("Error accessing the database: %v\n", err)
+	}
+
+	ds, err := factory.CreateDataStore(databaseDriver, dataSource)
+	if err != nil || db == nil {
+		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataSource)
+		return nil, nil, err
+	}
+
+	return db, ds, err
 }
 
 func createDeviceTwinService(coreDB datastore.DataStore) *devicetwinweb.Service {
