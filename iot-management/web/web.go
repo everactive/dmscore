@@ -44,7 +44,7 @@ type Service struct {
 // NewService returns a new web controller
 func NewService(srv manage.Manage) *Service {
 	s := &Service{
-		Manage: srv,
+		srv,
 	}
 
 	AuthMiddleWare = s.authMiddleWare()

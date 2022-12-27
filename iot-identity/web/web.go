@@ -32,12 +32,46 @@ var Logger = log.StandardLogger()
 type IdentityService struct {
 	Identity service.Identity
 	logger   *log.Logger
+	enrollRouter *gin.Engine
 }
 
 // NewIdentityService returns a new web controller
 func NewIdentityService(id service.Identity, l *log.Logger) *IdentityService {
-	return &IdentityService{
+	enrollRouter := gin.New()
+
+	logFormat := os.Getenv("LOG_FORMAT")
+	if strings.ToUpper(logFormat) == "JSON" {
+		log.Infof("Setting up JSON log format for logger middleware")
+
+		middlewareLogger := logger.New(log.StandardLogger(), logger.LogOptions{EnableStarting: true})
+
+		enrollRouter.Use(middlewareLogger.HandleFunc)
+
+	} else {
+		enrollRouter.Use(gin.Logger())
+	}
+
+	i := &IdentityService{
 		Identity: id,
 		logger:   l,
+		enrollRouter: enrollRouter,
 	}
+
+	enrollRouter.POST("/v1/device/enroll", i.EnrollDevice)
+
+	return i
+}
+
+func (i *IdentityService) Serve(ctx context.Context) error {
+
+	enrollPort := viper.GetString(keys.GetIdentityKey(keys.ServicePortEnroll))
+	log.Info("Starting service (enroll) on port : ", enrollPort)
+
+	log.Info("Listening and serving enroll on :" + enrollPort)
+
+	err := i.enrollRouter.Run(":" + enrollPort)
+
+	<- ctx.Done()
+
+	return err
 }
