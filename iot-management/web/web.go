@@ -39,15 +39,19 @@ const JSONHeader = "application/json; charset=UTF-8"
 // Service is the implementation of the web API
 type Service struct {
 	Manage manage.Manage
+	engine *gin.Engine
 }
 
 // NewService returns a new web controller
-func NewService(srv manage.Manage) *Service {
+func NewService(srv manage.Manage, engine *gin.Engine) *Service {
 	s := &Service{
 		srv,
+		engine,
 	}
 
 	AuthMiddleWare = s.authMiddleWare()
+
+	s.router(engine)
 
 	return s
 }
@@ -59,15 +63,9 @@ func (wb Service) Serve(ctx context.Context) error {
 
 	ssoServer = &usso.ProductionUbuntuSSOServer
 
-	r := gin.Default()
-
-	r.Use(gin.Logger())
-
-	wb.router(r)
-
 	var err error
 	go func() {
-		err = r.Run(":" + servicePort)
+		err = wb.engine.Run(":" + servicePort)
 	}()
 
 	<-ctx.Done()

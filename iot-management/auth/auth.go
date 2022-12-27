@@ -121,26 +121,28 @@ func VerifyKeycloakTokenWithAuth(a *ginkeycloak.Auth) func(authorizationToken st
 	}
 }
 
+var ErrUnauthorizedStaticClient = errors.New("authorization type static client but provided token was invalid, empty or token not set")
+
 // nolint
 // Deprecated: VerifyStaticClientToken verifies that a static token provided in the Authorization header if valid
 func VerifyStaticClientToken(authorizationToken string, wb web.Service) (datastore.User, error) {
-	if authorizationToken != "" {
-		staticClientToken := viper.GetString(keys.StaticClientToken)
-		if len(staticClientToken) > 0 {
-			if authorizationToken == staticClientToken {
-				// we expect the static-client to exist before it is used
-				_, err := wb.Manage.GetUser("static-client")
-				if err != nil {
-					return datastore.User{}, err
-				}
-
-				return datastore.User{
-					Username: "static-client",
-					Role:     datastore.Superuser,
-				}, nil
-			}
-		}
+	staticClientToken := viper.GetString(keys.StaticClientToken)
+	if authorizationToken == "" || len(staticClientToken) == 0 {
+		return datastore.User{}, ErrUnauthorizedStaticClient
 	}
 
-	return datastore.User{}, errors.New("authorization type static client but token was invalid")
+	if authorizationToken != staticClientToken {
+		return datastore.User{}, ErrUnauthorizedStaticClient
+	}
+
+	// we expect the static-client to exist before it is used
+	_, err := wb.Manage.GetUser("static-client")
+	if err != nil {
+		return datastore.User{}, err
+	}
+
+	return datastore.User{
+		Username: "static-client",
+		Role:     datastore.Superuser,
+	}, nil
 }

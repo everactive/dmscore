@@ -30,7 +30,9 @@ import (
 	"github.com/everactive/dmscore/iot-management/domain"
 	"github.com/everactive/dmscore/iot-management/identityapi"
 	"github.com/everactive/dmscore/iot-management/twinapi"
+	"github.com/everactive/dmscore/models"
 	"github.com/juju/usso/openid"
+	"gorm.io/gorm"
 )
 
 // Manage interface for the service
@@ -75,24 +77,29 @@ type Manage interface {
 	OrganizationGet(orgID string) (domain.Organization, error)
 	OrganizationCreate(org domain.OrganizationCreate) error
 	OrganizationUpdate(org domain.Organization) error
+
+	AddModelRequiredSnap(orgID, username, modelName, snapName string, role int) (*models.DeviceModelRequiredSnap, error)
+	GetModelRequiredSnaps(orgID, username, modelName string, role int) (*models.DeviceModel, error)
 }
 
 // Management implementation of the management service use cases
 type Management struct {
-	DS      datastore.DataStore
-	TwinAPI twinapi.Client
+	DS                   datastore.DataStore
+	DB                   *gorm.DB
+	TwinAPI              twinapi.Client
 	IdentityAPI          identityapi.Client
 	DeviceTwinController controller.Controller
 	Identity             service.Identity
 }
 
 // NewManagement creates an implementation of the management use cases
-func NewManagement(db datastore.DataStore, api twinapi.Client, id identityapi.Client, dtc controller.Controller, ids service.Identity) *Management {
+func NewManagement(db *gorm.DB, ds datastore.DataStore, api twinapi.Client, id identityapi.Client, dtc controller.Controller, ids service.Identity) *Management {
 	return &Management{
-		DS:                   db,
+		DS:                   ds,
 		TwinAPI:              api,
 		IdentityAPI:          id,
 		DeviceTwinController: dtc,
 		Identity:             ids,
+		DB:                   db,
 	}
 }

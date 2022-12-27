@@ -21,9 +21,11 @@ package manage
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
+	"github.com/everactive/dmscore/models"
 )
 
 // SnapList lists the snaps for a device
@@ -246,3 +248,82 @@ func (srv *Management) SnapSnapshot(orgID, username string, role int, deviceID, 
 
 	return web.StandardResponse{}
 }
+
+var NotAuthorizedErr = errors.New("user is not authorized")
+
+func (srv *Management) GetModelRequiredSnaps(orgID, username, modelName string, role int) (*models.DeviceModel, error) {
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
+	if !hasAccess {
+		return nil, NotAuthorizedErr
+	}
+
+	var deviceModel models.DeviceModel
+	tx := srv.DB.Preload("DeviceModelRequiredSnaps").Find(&deviceModel, &models.DeviceModel{Name: modelName})
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &deviceModel, nil
+}
+
+func (srv *Management) AddModelRequiredSnap(orgID, username, modelName, snapName string, role int) (*models.DeviceModelRequiredSnap, error) {
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
+	if !hasAccess {
+		return nil, NotAuthorizedErr
+	}
+
+	var deviceModel models.DeviceModel
+	tx := srv.DB.Find(&deviceModel, &models.DeviceModel{Name: modelName})
+
+	if tx.RowsAffected == 0 {
+		deviceModel.Name = modelName
+		tx = srv.DB.Create(&deviceModel)
+		if tx.Error != nil {
+			panic(tx.Error)
+		}
+	}
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	requiredSnap := &models.DeviceModelRequiredSnap{
+		DeviceModelID: deviceModel.ID,
+		Name:          snapName,
+	}
+
+	tx = srv.DB.Create(requiredSnap)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return requiredSnap, nil
+}
+
+// ModelRequiredSnaps lists the snaps required for a model specific device
+//func (srv *Management) ModelRequiredSnaps(orgID, username string, role int, deviceID string) web.SnapsResponse {
+//	hasAccess := srv.DB.OrgUserAccess(orgID, username, role)
+//	if !hasAccess {
+//		return web.SnapsResponse{
+//			StandardResponse: web.StandardResponse{
+//				Code:    "SnapsAuth",
+//				Message: "the user does not have permissions for the organization",
+//			},
+//		}
+//	}
+//
+//	err, response, match := srv.verifyOrgMatches(orgID, deviceID)
+//	if !match {
+//		return web.SnapsResponse{StandardResponse: response}
+//	}
+//
+//	snaps, err := srv.DeviceTwinController.DeviceSnaps(orgID, deviceID)
+//	if err != nil {
+//		return web.SnapsResponse{StandardResponse: web.StandardResponse{
+//			Code:    "SnapList",
+//			Message: err.Error(),
+//		}}
+//	}
+//
+//	return web.SnapsResponse{Snaps: snaps}
+//}

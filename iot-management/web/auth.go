@@ -92,6 +92,10 @@ func checkUserPermissions(user datastore.User, minimumAuthorizedRole int) error 
 	return nil
 }
 
+func GetUserFromContextAndCheckPermissions(c *gin.Context, minimumAuthorizableRole int) (*datastore.User, error) {
+	return getUserFromContextAndCheckPermissions(c, minimumAuthorizableRole)
+}
+
 func getUserFromContextAndCheckPermissions(c *gin.Context, minimumAuthorizableRole int) (*datastore.User, error) {
 	userInterface, exists := c.Get("USER")
 	if exists {
