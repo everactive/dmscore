@@ -31,14 +31,14 @@ import (
 )
 
 // RegisterOrganization registers a new organization with the identity service
-func (wb IdentityService) RegisterOrganization(context *gin.Context) {
+func (i IdentityService) RegisterOrganization(context *gin.Context) {
 	// Decode the JSON body
 	req, err := decodeOrganizationRequest(context.Request, context.Writer)
 	if err != nil {
 		return
 	}
 
-	id, err := wb.Identity.RegisterOrganization(req)
+	id, err := i.Identity.RegisterOrganization(req)
 	if err != nil {
 		log.Println("Error registering organization:", err)
 		formatStandardResponse("RegOrg", err.Error(), context.Writer)
@@ -48,8 +48,8 @@ func (wb IdentityService) RegisterOrganization(context *gin.Context) {
 }
 
 // OrganizationList fetches organizations
-func (wb IdentityService) OrganizationList(context *gin.Context) {
-	orgs, err := wb.Identity.OrganizationList()
+func (i IdentityService) OrganizationList(context *gin.Context) {
+	orgs, err := i.Identity.OrganizationList()
 	if err != nil {
 		log.Println("Error listing organizations:", err)
 		formatStandardResponse("OrgList", err.Error(), context.Writer)

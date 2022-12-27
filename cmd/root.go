@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
@@ -12,7 +14,6 @@ import (
 	devicetwinweb "github.com/everactive/dmscore/iot-devicetwin/web"
 	"github.com/everactive/dmscore/iot-identity/config/configkey"
 	identitydatastore "github.com/everactive/dmscore/iot-identity/datastore"
-	"github.com/everactive/dmscore/iot-identity/middleware/logger"
 	"github.com/everactive/dmscore/iot-identity/service"
 	"github.com/everactive/dmscore/iot-identity/service/cert"
 	identityfactory "github.com/everactive/dmscore/iot-identity/service/factory"
@@ -26,19 +27,22 @@ import (
 	"github.com/everactive/dmscore/iot-management/web"
 	migrate2 "github.com/everactive/dmscore/pkg/migrate"
 	"github.com/everactive/ginkeycloak"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 
 	// this is needed for migrate
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	// this is needed for migrate
 	_ "github.com/lib/pq"
+
+	"github.com/thejerf/suture/v4"
 )
 
 func init() {
@@ -61,7 +65,7 @@ var runCommand = cobra.Command{
 	Use:   "run",
 	Short: "run",
 	Long:  "run",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.SetLevel(log.TraceLevel)
 
 		var configFilePath string
@@ -131,7 +135,38 @@ var runCommand = cobra.Command{
 		// Start the web service
 		www := web.NewService(srv)
 
-		www.Run()
+		// Start the web service
+		supervisorSpec := suture.Spec{}
+		sup := suture.New("dmscore", supervisorSpec)
+
+		sup.Add(ids)
+		sup.Add(www)
+
+		ctx := context.Background()
+		ctx, cancelCtx := context.WithCancel(ctx)
+
+		err = <-sup.ServeBackground(ctx)
+		if err != nil && !errors.Is(err, context.Canceled) {
+			log.Errorf("Well, this isn't good, we existed with an error and we were not canceled: %s", err)
+		} else {
+			log.Infof("Context was canceled, exiting")
+		}
+
+		quitSignals := make(chan os.Signal, 1)
+		signal.Notify(quitSignals, syscall.SIGINT, syscall.SIGTERM)
+
+		interruptSignal := <-quitSignals
+
+		cancelCtx()
+
+		// SIGINT is expected from systemd and should not result in an error exit
+		if interruptSignal == syscall.SIGINT || interruptSignal == syscall.SIGTERM {
+			// We expect this signal, it is not an error
+			log.Infof("Caught SIGINT or SIGTERM, exiting...")
+			return nil
+		}
+
+		return fmt.Errorf("caught signal: %v, %d", interruptSignal, interruptSignal)
 	},
 }
 
@@ -268,36 +303,6 @@ func createIdentityService() *identityweb.IdentityService {
 	// Start the web service
 	identityweb.Logger = log.StandardLogger()
 	wb := identityweb.NewIdentityService(srv, log.StandardLogger())
-
-	enrollPort := viper.GetString(keys.GetIdentityKey(keys.ServicePortEnroll))
-
-	log.Info("Starting service (enroll) on port : ", enrollPort)
-
-	// internalRouter := gin.New()
-	enrollRouter := gin.New()
-
-	logFormat := os.Getenv("LOG_FORMAT")
-	if strings.ToUpper(logFormat) == "JSON" {
-		log.Infof("Setting up JSON log format for logger middleware")
-
-		middlewareLogger := logger.New(log.StandardLogger(), logger.LogOptions{EnableStarting: true})
-
-		enrollRouter.Use(middlewareLogger.HandleFunc)
-
-	} else {
-		enrollRouter.Use(gin.Logger())
-	}
-
-	wb.SetRouter(enrollRouter)
-
-	go func() {
-		log.Info("Listening and serving enroll on :" + enrollPort)
-
-		err = enrollRouter.Run(":" + enrollPort)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
 
 	return wb
 }

@@ -31,7 +31,7 @@ import (
 )
 
 // EnrollDevice connects an IoT device with the identity service
-func (wb IdentityService) EnrollDevice(c *gin.Context) {
+func (i IdentityService) EnrollDevice(c *gin.Context) {
 	// Decode the assertions from the request
 	assertion1, assertion2, err := decodeEnrollRequest(c.Request)
 	if err != nil {
@@ -60,7 +60,7 @@ func (wb IdentityService) EnrollDevice(c *gin.Context) {
 
 	log.Tracef("Attempting to enroll device")
 
-	en, err := wb.Identity.EnrollDevice(&req)
+	en, err := i.Identity.EnrollDevice(&req)
 	if err != nil {
 		log.Error("enrolling device: ", err)
 		formatStandardResponse("EnrollDevice", err.Error(), c.Writer)

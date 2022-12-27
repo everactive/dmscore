@@ -1,0 +1,22 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  install-schema-generate:
+    desc: Installs the schema-generate tool
+    cmds:
+      - go install github.com/everactive/generate/...@v1.0.1
+  run-tests:
+    desc: Runs the unit tests, making sure everything is setup
+    cmds:
+      - go test ./...
+  create-migration:
+    desc: Creates a dmscore database migration (this is for the primary "management" database)
+    cmds:
+      - |
+        if [ -z "${MIGRATION_NAME}" ]; then
+          echo "Need MIGRATION_NAME"
+          exit 1
+        fi
+        migrate create -ext sql -dir db/migrations $MIGRATION_NAME

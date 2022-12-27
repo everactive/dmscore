@@ -21,8 +21,16 @@
 package web
 
 import (
+	"context"
+	"github.com/everactive/dmscore/config/keys"
+	"github.com/everactive/dmscore/iot-identity/middleware/logger"
 	"github.com/everactive/dmscore/iot-identity/service"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"os"
+	"strings"
+	"time"
 )
 
 // Logger is a logger specific to the web package and can be swapped out
@@ -30,14 +38,58 @@ var Logger = log.StandardLogger()
 
 // IdentityService is the implementation of the web API
 type IdentityService struct {
-	Identity service.Identity
-	logger   *log.Logger
+	Identity     service.Identity
+	logger       *log.Logger
+	enrollRouter *gin.Engine
+	runErr error
 }
 
 // NewIdentityService returns a new web controller
 func NewIdentityService(id service.Identity, l *log.Logger) *IdentityService {
-	return &IdentityService{
-		Identity: id,
-		logger:   l,
+	enrollRouter := gin.New()
+
+	logFormat := os.Getenv("LOG_FORMAT")
+	if strings.ToUpper(logFormat) == "JSON" {
+		log.Infof("Setting up JSON log format for logger middleware")
+
+		middlewareLogger := logger.New(log.StandardLogger(), logger.LogOptions{EnableStarting: true})
+
+		enrollRouter.Use(middlewareLogger.HandleFunc)
+
+	} else {
+		enrollRouter.Use(gin.Logger())
+	}
+
+	i := &IdentityService{
+		Identity:     id,
+		logger:       l,
+		enrollRouter: enrollRouter,
+	}
+
+	enrollRouter.POST("/v1/device/enroll", i.EnrollDevice)
+
+	enrollPort := viper.GetString(keys.GetIdentityKey(keys.ServicePortEnroll))
+	log.Info("Starting service (enroll) on port : ", enrollPort)
+
+	log.Info("Listening and serving enroll on :" + enrollPort)
+
+	go func() {
+		i.runErr = i.enrollRouter.Run(":" + enrollPort)
+	}()
+
+	return i
+}
+
+func (i *IdentityService) Serve(ctx context.Context) error {
+	intervalTicker := time.NewTicker(60 * time.Second)
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("We're done: %s", ctx.Err())
+			return i.runErr
+		case <-intervalTicker.C:
+			log.Infof("%s still ticking", "DeviceTwinService")
+		}
 	}
 }

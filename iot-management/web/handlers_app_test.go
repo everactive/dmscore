@@ -27,34 +27,6 @@ import (
 	"github.com/everactive/dmscore/iot-management/crypt"
 )
 
-//func TestService_IndexHandler(t *testing.T) {
-//	tests := []struct {
-//		name     string
-//		template string
-//		want     int
-//	}{
-//		{"valid", "/../static/app.html", http.StatusOK},
-//		{"invalid-template", "/does-not-exist.html", http.StatusInternalServerError},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			indexTemplate = tt.template
-//
-//			secret, err := crypt.CreateSecret(32)
-//			if err != nil {
-//				t.Fatalf("Error generating JWT secret: %s", err)
-//				return
-//			}
-//
-//			wb := NewService(&mocks.Manage{})
-//			w := sendRequest("GET", "/", nil, wb, "jamesj", secret, 100)
-//			if w.Code != tt.want {
-//				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
-//			}
-//		})
-//	}
-//}
-
 func TestService_VersionTokenHandler(t *testing.T) {
 	tests := []struct {
 		name string

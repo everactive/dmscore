@@ -26,8 +26,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/everactive/dmscore/iot-identity/service"
 )
@@ -62,10 +60,8 @@ func sendEnrollRequest(method, url string, data io.Reader, srv *IdentityService)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(method, url, data)
 
-	engine := gin.Default()
-
-	srv.enrollRouter(engine)
-	engine.ServeHTTP(w, req)
+	// engine.ServeHTTP(w, req)
+	srv.enrollRouter.ServeHTTP(w, req)
 
 	return w
 }
