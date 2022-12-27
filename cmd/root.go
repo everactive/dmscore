@@ -109,6 +109,7 @@ var runCommand = cobra.Command{
 		authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))
 		authDisabled := viper.GetBool(keys.DisableAuth)
 		if authProvider == "disabled" && authDisabled {
+			log.Infof("Auth is disabled and auth provider is set to disabled, using static-client for requests with no auth checking")
 			web.VerifyTokenAndUser = func(authorizationToken string, wb web.Service) (datastore.User, error) {
 				return datastore.User{
 					Username: "static-client",
@@ -122,6 +123,8 @@ var runCommand = cobra.Command{
 				if staticClientToken != "" {
 					auth.CreateServiceClientUser(ds, "static-client")
 					web.VerifyTokenAndUser = auth.VerifyStaticClientToken //nolint
+				} else {
+					log.Error("Static client token is empty, not properly configured for using static client")
 				}
 			} else if authProvider == "keycloak" {
 				clientID := viper.GetString(configkey.OAuth2ClientID)
@@ -214,7 +217,7 @@ func createManagementDatastore() (*gorm.DB, datastore.DataStore, error) {
 		log.Fatalf("Error accessing the database: %v\n", err)
 	}
 
-	ds, err := factory.CreateDataStore(databaseDriver, dataSource)
+	ds, err := factory.CreateDataStoreWithDB(db, databaseDriver)
 	if err != nil || db == nil {
 		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataSource)
 		return nil, nil, err

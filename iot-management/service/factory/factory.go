@@ -22,6 +22,7 @@ package factory
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/datastore/memory"
@@ -41,4 +42,16 @@ func CreateDataStore(driver string, dataSource string) (datastore.DataStore, err
 	}
 
 	return db, nil
+}
+
+func CreateDataStoreWithDB(db *gorm.DB, driver string) (datastore.DataStore, error) {
+	var ds datastore.DataStore
+	switch driver {
+	case "postgres":
+		ds = postgres.OpenStoreWithDB(db)
+	default:
+		return nil, fmt.Errorf("unknown data store driver: %v", driver)
+	}
+
+	return ds, nil
 }
