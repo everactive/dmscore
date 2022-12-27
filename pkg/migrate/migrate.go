@@ -8,12 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(datasource, driver, sourceURL, databaseName string) error {
-	db, err := sql.Open(driver, datasource)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func RunWithDB(db *sql.DB, sourceURL, databaseName string) error {
 	driverInst, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		log.Fatal(err)
@@ -35,4 +30,13 @@ func Run(datasource, driver, sourceURL, databaseName string) error {
 	}
 
 	return nil
+}
+
+func Run(datasource, driver, sourceURL, databaseName string) error {
+	db, err := sql.Open(driver, datasource)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return RunWithDB(db, sourceURL, databaseName)
 }

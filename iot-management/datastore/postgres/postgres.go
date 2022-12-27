@@ -34,7 +34,6 @@ import (
 
 // Store implements an in-memory store for testing
 type Store struct {
-	driver string
 	*sql.DB
 	gormDB *gorm.DB
 }
@@ -51,6 +50,30 @@ func OpenStore(driver, dataSource string) *Store {
 	pgStore = openDatabase(driver, dataSource)
 
 	return pgStore
+}
+
+func OpenStoreWithDB(db *gorm.DB) *Store {
+	// Check that we have a valid database connection
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Error accessing the database: %v\n", err)
+	}
+	err = sqlDB.Ping()
+	if err != nil {
+		log.Fatalf("Error accessing the database: %v\n", err)
+	}
+
+	databaseName := viper.GetString(keys.DatabaseName)
+	migrationsPath := viper.GetString(keys.MigrationsSourceURL)
+	err = migrate.RunWithDB(sqlDB, fmt.Sprintf("file://%s", migrationsPath), databaseName)
+	if err != nil {
+		log.Fatalf("Error during migrations, need to manually intervene: %s", err.Error())
+	}
+
+	return &Store{
+		DB:     sqlDB,
+		gormDB: db,
+	}
 }
 
 // openDatabase return an open database connection for a postgreSQL database
@@ -79,7 +102,6 @@ func openDatabase(driver, dataSource string) *Store {
 	}
 
 	return &Store{
-		driver: driver,
 		DB:     sqlDB,
 		gormDB: db,
 	}
