@@ -3,6 +3,11 @@
 version: '3'
 
 tasks:
+  build-and-run-tests:
+    desc: Smoke test (for compilation) to build the binary and run the tests
+    cmds:
+      - go build bin/dmscore/dmscore.go && rm ./dmscore
+      - task: run-tests
   install-schema-generate:
     desc: Installs the schema-generate tool
     cmds:
@@ -21,6 +26,8 @@ tasks:
     desc: Update mocks used by unit tests
     cmds:
       - mockery --dir iot-management/service/manage --all --inpackage
+      - mockery --dir iot-devicetwin/service/controller --all --inpackage
+      - mockery --dir iot-devicetwin/service/devicetwin --all --inpackage
   generate-message-structs:
     desc: This will generate the Go structs from the schema definitions
     cmds:

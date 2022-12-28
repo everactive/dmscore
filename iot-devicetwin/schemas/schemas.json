@@ -59,10 +59,13 @@
     },
     "health": {
       "type": "object",
+      "required": ["orgId", "deviceId", "refresh"],
       "properties": {
-        "orgId":            { "type":  "string" },
-        "deviceId":         { "type":  "string" },
-        "refresh":          { "type":  "string", "format": "date-time" }
+        "orgId":              { "type":  "string" },
+        "deviceId":           { "type":  "string" },
+        "refresh":            { "type":  "string", "format": "date-time" },
+        "snapListHash":       { "type":  "string" },
+        "installedSnapsHash": { "type":  "string" }
       }
     },
     "publishDevice": {

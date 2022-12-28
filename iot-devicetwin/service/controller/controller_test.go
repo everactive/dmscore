@@ -20,34 +20,18 @@
 package controller
 
 import (
-	"testing"
-
+	"encoding/json"
+	"errors"
+	"fmt"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/everactive/dmscore/iot-devicetwin/pkg/actions"
+	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
 	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
+	ksuid2 "github.com/segmentio/ksuid"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
-
-func TestService_SubscribeToActions(t *testing.T) {
-	type fields struct {
-		MQTT       mqtt.Connect
-		DeviceTwin devicetwin.DeviceTwin
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		{"valid", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: tt.fields.MQTT, DeviceTwin: tt.fields.DeviceTwin}
-			if err := srv.SubscribeToActions(); (err != nil) != tt.wantErr {
-				t.Errorf("Service.SubscribeToActions() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
 func TestService_ActionHandler(t *testing.T) {
 	m1 := []byte(`{"success": false, "message": "MOCK error"}`)
@@ -66,14 +50,14 @@ func TestService_ActionHandler(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		{"valid", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{}}},
-		{"error-response", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m1}}},
-		{"invalid-action", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m2}}},
+		{"valid", fields{&mqtt.MockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{}}},
+		{"error-response", fields{&mqtt.MockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m1}}},
+		{"invalid-action", fields{&mqtt.MockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m2}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: tt.fields.MQTT, DeviceTwin: tt.fields.DeviceTwin}
-			srv.ActionHandler(tt.args.client, tt.args.msg)
+			srv := Service{DeviceTwin: tt.fields.DeviceTwin}
+			srv.ActionHandler(tt.args.msg)
 		})
 	}
 }
@@ -84,12 +68,17 @@ func TestService_HealthHandler(t *testing.T) {
 	m3 := []byte(`{"orgId": "abc", "deviceId": "new-device"}`)
 
 	type fields struct {
-		MQTT       mqtt.Connect
-		DeviceTwin *devicetwin.MockDeviceTwin
+		MQTT                    mqtt.Connect
+		ReturnSoftDeletedDevice bool
 	}
 	type args struct {
-		client MQTT.Client
-		msg    MQTT.Message
+		client         MQTT.Client
+		msg            MQTT.Message
+		deviceID       string
+		orgID          string
+		existingDevice bool
+		isDeleted      bool
+		waitOnChannel  bool
 	}
 	tests := []struct {
 		name   string
@@ -97,20 +86,81 @@ func TestService_HealthHandler(t *testing.T) {
 		args   args
 		want   int
 	}{
-		{"valid", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m1}}, 0},
-		{"invalid-message", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{}}, 0},
-		{"invalid-clientID", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m2}}, 0},
-		{"new-clientID", fields{&mqtt.MockConnect{}, &devicetwin.MockDeviceTwin{ReturnSoftDeletedDevice: false}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m3, TopicPath: "device/health/new-device"}}, 2},
+		{name: "valid", args: args{msg: &mqtt.MockMessage{Message: m1}, orgID: "abc", deviceID: "aa111", existingDevice: true}},
+		{name: "invalid-message", args: args{msg: &mqtt.MockMessage{}}},
+		{name: "invalid-clientID", args: args{msg: &mqtt.MockMessage{Message: m2}}},
+		{name: "new-clientID",
+			args: args{
+				msg:           &mqtt.MockMessage{Message: m3, TopicPath: "device/health/new-device"},
+				deviceID:      "new-device",
+				orgID:         "abc",
+				waitOnChannel: true,
+			},
+			want: 2,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: tt.fields.MQTT, DeviceTwin: tt.fields.DeviceTwin}
-
-			srv.HealthHandler(tt.args.client, tt.args.msg)
-			got := len(tt.fields.DeviceTwin.Actions)
-			if got != tt.want {
-				t.Errorf("HealthHandler() = %v, want %v", got, tt.want)
+			expectedDeviceMessage := &messages.Device{
+				DeviceId: tt.args.deviceID,
 			}
+			unscopedController := &MockUnscopedController{}
+			unscopedController.On("DeviceGetByID", tt.args.deviceID).Return(expectedDeviceMessage, tt.args.isDeleted, nil)
+
+			deviceTwin := &devicetwin.MockDeviceTwin{}
+			deviceTwin.On("Unscoped").Return(unscopedController)
+
+			publishChan := make(chan mqtt.PublishMessage)
+			srv := Service{DeviceTwin: deviceTwin, publishChan: publishChan}
+
+			if !tt.args.waitOnChannel {
+				if tt.args.existingDevice == true {
+					deviceTwin.On("HealthHandler", messages.Health{DeviceId: tt.args.deviceID, OrgId: tt.args.orgID}).Return(nil)
+
+					srv.HealthHandler(tt.args.msg)
+					return
+				}
+
+				return
+			}
+
+			ksuid := ksuid2.New()
+			generateKSUID = func() ksuid2.KSUID {
+				return ksuid
+			}
+
+			act := messages.SubscribeAction{
+				Action: actions.Device,
+				Id:     ksuid.String(),
+			}
+
+			deviceTwin.On("HealthHandler", messages.Health{DeviceId: tt.args.deviceID, OrgId: tt.args.orgID}).Return(errors.New("some error"))
+			deviceTwin.On("ActionCreate", tt.args.orgID, tt.args.deviceID, act).Return(nil)
+
+			go func() {
+				srv.HealthHandler(tt.args.msg)
+			}()
+
+			data, err := json.Marshal(&act)
+			if err != nil {
+				assert.Error(t, err)
+			}
+
+			expectedMessage := mqtt.PublishMessage{
+				Topic:   fmt.Sprintf("devices/sub/%s", tt.args.deviceID),
+				Payload: string(data),
+			}
+
+			msg := <-publishChan
+			if tt.args.deviceID != "" {
+				assert.Equal(t, expectedMessage.Topic, msg.Topic)
+			}
+			assert.Equal(t, expectedMessage.Payload, msg.Payload)
+
+			//got := len(deviceTwin.call)
+			//if got != tt.want {
+			//	t.Errorf("HealthHandler() = %v, want %v", got, tt.want)
+			//}
 		})
 	}
 }

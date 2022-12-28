@@ -40,6 +40,11 @@ const (
 var conn *Connection
 var client MQTT.Client
 
+type PublishMessage struct {
+	Topic string
+	Payload string
+}
+
 // Connect is the interface for an MQTT connection
 type Connect interface {
 	Publish(topic, payload string) error

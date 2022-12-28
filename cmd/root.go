@@ -7,15 +7,9 @@ import (
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
-	devicetwinconfig "github.com/everactive/dmscore/iot-devicetwin/config"
-	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
-	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
-	devicetwinfactory "github.com/everactive/dmscore/iot-devicetwin/service/factory"
-	devicetwinweb "github.com/everactive/dmscore/iot-devicetwin/web"
 	"github.com/everactive/dmscore/iot-identity/config/configkey"
 	identitydatastore "github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/service"
-	"github.com/everactive/dmscore/iot-identity/service/cert"
 	identityfactory "github.com/everactive/dmscore/iot-identity/service/factory"
 	identityweb "github.com/everactive/dmscore/iot-identity/web"
 	"github.com/everactive/dmscore/iot-management/auth"
@@ -32,10 +26,8 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"io/ioutil"
 	"os"
 	"os/signal"
-	"path"
 	"strings"
 	"syscall"
 
@@ -46,6 +38,8 @@ import (
 
 	web2 "github.com/everactive/dmscore/pkg/web"
 	"github.com/thejerf/suture/v4"
+
+	devicetwin2 "github.com/everactive/dmscore/pkg/devicetwin"
 )
 
 func init() {
@@ -98,10 +92,10 @@ var runCommand = cobra.Command{
 
 		ids := createIdentityService()
 
-		dts := createDeviceTwinService(ds)
+		dts, controller := devicetwin2.New(ds)
 
 		// Create the main services
-		srv := manage.NewManagement(db, ds, twinAPI, identityAPI, dts.Controller, ids.Identity)
+		srv := manage.NewManagement(db, ds, twinAPI, identityAPI, controller, ids.Identity)
 
 		// Figure out what our auth provider is (keycloak or legacy static client token)
 		authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))
@@ -137,12 +131,11 @@ var runCommand = cobra.Command{
 				web.VerifyTokenAndUser = auth.VerifyKeycloakTokenWithAuth(a)
 			}
 		}
-
-		// Start the web service
 		supervisorSpec := suture.Spec{}
 		sup := suture.New("dmscore", supervisorSpec)
 
 		sup.Add(ids)
+		sup.Add(dts)
 		sup.Add(web2.New(srv, db))
 
 		ctx := context.Background()
@@ -224,66 +217,6 @@ func createManagementDatastore() (*gorm.DB, datastore.DataStore, error) {
 	}
 
 	return db, ds, err
-}
-
-func createDeviceTwinService(coreDB datastore.DataStore) *devicetwinweb.Service {
-	databaseDriver := viper.GetString(keys.GetDeviceTwinKey(keys.DatabaseDriver))
-	dataStoreSource := viper.GetString(keys.GetDeviceTwinKey(keys.DatabaseConnectionString))
-
-	db, err := devicetwinfactory.CreateDataStore(databaseDriver, dataStoreSource)
-	if err != nil {
-		log.Fatalf("Error connecting to data store: %v", err)
-	}
-
-	URL := viper.GetString(keys.MQTTURL)
-	port := viper.GetString(keys.MQTTPort)
-
-	certsDir := viper.GetString(keys.MQTTCertificatesPath)
-	log.Tracef("MQTT Certs dir: %s", certsDir)
-
-	rootCAFilename := viper.GetString(keys.MQTTRootCAFilename)
-	clientCertFilename := viper.GetString(keys.MQTTClientCertificateFilename)
-	clientKeyFilename := viper.GetString(keys.MQTTClientKeyFilename)
-
-	c := devicetwinconfig.MQTTConnect{}
-
-	// nolint: gosec
-	rootCA, err := ioutil.ReadFile(path.Join(certsDir, rootCAFilename))
-	if err != nil {
-		panic(err)
-	}
-
-	// nolint: gosec
-	certFile, err := ioutil.ReadFile(path.Join(certsDir, clientCertFilename))
-	if err != nil {
-		panic(err)
-	}
-
-	// nolint: gosec
-	key, err := ioutil.ReadFile(path.Join(certsDir, clientKeyFilename))
-
-	c.RootCA = rootCA
-	c.ClientKey = key
-	c.ClientCert = certFile
-
-	prefix := viper.GetString(keys.MQTTClientIDPrefix)
-
-	// Generate a random string
-	s, err := cert.CreateSecret(6)
-	if err != nil {
-		log.Printf("Error creating client ID: %v", err)
-	}
-
-	c.ClientID = fmt.Sprintf("%s-%s", prefix, s)
-
-	twin := devicetwin.NewService(db, coreDB)
-	ctrl := controller.NewService(URL, port, &c, twin)
-
-	servicePort := viper.GetString(keys.GetDeviceTwinKey(keys.ServicePort))
-
-	// Start the web API service
-	w := devicetwinweb.NewService(servicePort, ctrl)
-	return w
 }
 
 func CreateIdentityDataStore() (identitydatastore.DataStore, error) {

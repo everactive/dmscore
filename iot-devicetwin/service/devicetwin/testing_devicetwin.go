@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Package devicetwin is the MockDeviceTwin and associated pieces for testing
+// Package devicetwin is the ManualMockDeviceTwin and associated pieces for testing
 package devicetwin
 
 import (
@@ -33,19 +33,19 @@ const (
 	invalidDeviceIDString = "invalid"
 )
 
-// MockDeviceTwin mocks a device twin service
-type MockDeviceTwin struct {
+// ManualMockDeviceTwin mocks a device twin service
+type ManualMockDeviceTwin struct {
 	Actions                 []string
 	ReturnSoftDeletedDevice bool
 }
 
 // Unscoped gets an instance of the DeviceTwin that is able to access (soft) deleted data
-func (twin *MockDeviceTwin) Unscoped() UnscopedDeviceTwin {
+func (twin *ManualMockDeviceTwin) Unscoped() UnscopedDeviceTwin {
 	return twin
 }
 
 // DeviceGetByID gets a device just by its id without org
-func (twin *MockDeviceTwin) DeviceGetByID(clientID string) (*messages.Device, bool, error) {
+func (twin *ManualMockDeviceTwin) DeviceGetByID(clientID string) (*messages.Device, bool, error) {
 	if twin.ReturnSoftDeletedDevice {
 		d, err := twin.DeviceGet("", clientID)
 		return &d, true, err
@@ -55,7 +55,7 @@ func (twin *MockDeviceTwin) DeviceGetByID(clientID string) (*messages.Device, bo
 }
 
 // HealthHandler mocks the health handler
-func (twin *MockDeviceTwin) HealthHandler(payload messages.Health) error {
+func (twin *ManualMockDeviceTwin) HealthHandler(payload messages.Health) error {
 	if payload.DeviceId == invalidDeviceIDString || payload.DeviceId == "new-device" {
 		return fmt.Errorf("MOCK error in health handler")
 	}
@@ -63,7 +63,7 @@ func (twin *MockDeviceTwin) HealthHandler(payload messages.Health) error {
 }
 
 // ActionResponse mocks the action handler
-func (twin *MockDeviceTwin) ActionResponse(clientID, actionID, action string, payload []byte) error {
+func (twin *ManualMockDeviceTwin) ActionResponse(clientID, actionID, action string, payload []byte) error {
 	if action == invalidDeviceIDString {
 		return fmt.Errorf("MOCK error in action")
 	}
@@ -71,7 +71,7 @@ func (twin *MockDeviceTwin) ActionResponse(clientID, actionID, action string, pa
 }
 
 // DeviceSnaps mocks the snap list
-func (twin *MockDeviceTwin) DeviceSnaps(orgID, clientID string) ([]messages.DeviceSnap, error) {
+func (twin *ManualMockDeviceTwin) DeviceSnaps(orgID, clientID string) ([]messages.DeviceSnap, error) {
 	if clientID == invalidDeviceIDString {
 		return nil, fmt.Errorf("MOCK snaps list")
 	}
@@ -81,7 +81,7 @@ func (twin *MockDeviceTwin) DeviceSnaps(orgID, clientID string) ([]messages.Devi
 }
 
 // ActionCreate mocks the action log creation
-func (twin *MockDeviceTwin) ActionCreate(orgID, deviceID string, act messages.SubscribeAction) error {
+func (twin *ManualMockDeviceTwin) ActionCreate(orgID, deviceID string, act messages.SubscribeAction) error {
 	if deviceID == invalidDeviceIDString {
 		return fmt.Errorf("MOCK action log create")
 	}
@@ -93,12 +93,12 @@ func (twin *MockDeviceTwin) ActionCreate(orgID, deviceID string, act messages.Su
 }
 
 // ActionUpdate mocks the action log update
-func (twin *MockDeviceTwin) ActionUpdate(actionID, status, message string) error {
+func (twin *ManualMockDeviceTwin) ActionUpdate(actionID, status, message string) error {
 	return nil
 }
 
 // ActionList mocks the action log list
-func (twin *MockDeviceTwin) ActionList(orgID, clientID string) ([]domain.Action, error) {
+func (twin *ManualMockDeviceTwin) ActionList(orgID, clientID string) ([]domain.Action, error) {
 	if clientID == invalidDeviceIDString {
 		return nil, fmt.Errorf("MOCK error action list")
 	}
@@ -106,7 +106,7 @@ func (twin *MockDeviceTwin) ActionList(orgID, clientID string) ([]domain.Action,
 }
 
 // DeviceGet mocks fetching a device
-func (twin *MockDeviceTwin) DeviceGet(orgID, clientID string) (messages.Device, error) {
+func (twin *ManualMockDeviceTwin) DeviceGet(orgID, clientID string) (messages.Device, error) {
 	if clientID == invalidDeviceIDString {
 		return messages.Device{}, fmt.Errorf("MOCK error device get")
 	}
@@ -121,7 +121,7 @@ func (twin *MockDeviceTwin) DeviceGet(orgID, clientID string) (messages.Device, 
 }
 
 // DeviceList mocks fetching devices for an organization
-func (twin *MockDeviceTwin) DeviceList(orgID string) ([]messages.Device, error) {
+func (twin *ManualMockDeviceTwin) DeviceList(orgID string) ([]messages.Device, error) {
 	if orgID == invalidDeviceIDString {
 		return nil, fmt.Errorf("MOCK error device list")
 	}
@@ -138,12 +138,12 @@ func (twin *MockDeviceTwin) DeviceList(orgID string) ([]messages.Device, error) 
 }
 
 // DeviceDelete mocks deleting a device
-func (twin *MockDeviceTwin) DeviceDelete(deviceID string) (string, error) {
+func (twin *ManualMockDeviceTwin) DeviceDelete(deviceID string) (string, error) {
 	return "c333", nil
 }
 
 // GroupCreate mocks creating a group
-func (twin *MockDeviceTwin) GroupCreate(orgID, name string) error {
+func (twin *ManualMockDeviceTwin) GroupCreate(orgID, name string) error {
 	if orgID == invalidDeviceIDString {
 		return fmt.Errorf("MOCK error group create")
 	}
@@ -151,7 +151,7 @@ func (twin *MockDeviceTwin) GroupCreate(orgID, name string) error {
 }
 
 // GroupList mocks listing groups
-func (twin *MockDeviceTwin) GroupList(orgID string) ([]domain.Group, error) {
+func (twin *ManualMockDeviceTwin) GroupList(orgID string) ([]domain.Group, error) {
 	if orgID == invalidDeviceIDString {
 		return nil, fmt.Errorf("MOCK error group list")
 	}
@@ -161,7 +161,7 @@ func (twin *MockDeviceTwin) GroupList(orgID string) ([]domain.Group, error) {
 }
 
 // GroupGet mocks fetching a group
-func (twin *MockDeviceTwin) GroupGet(orgID, name string) (domain.Group, error) {
+func (twin *ManualMockDeviceTwin) GroupGet(orgID, name string) (domain.Group, error) {
 	if orgID == invalidDeviceIDString || name == invalidDeviceIDString {
 		return domain.Group{}, fmt.Errorf("MOCK error group device unlink")
 	}
@@ -171,7 +171,7 @@ func (twin *MockDeviceTwin) GroupGet(orgID, name string) (domain.Group, error) {
 }
 
 // GroupLinkDevice mocks linking a device to a group
-func (twin *MockDeviceTwin) GroupLinkDevice(orgID, name, clientID string) error {
+func (twin *ManualMockDeviceTwin) GroupLinkDevice(orgID, name, clientID string) error {
 	if orgID == invalidDeviceIDString || name == invalidDeviceIDString || clientID == invalidDeviceIDString {
 		return fmt.Errorf("MOCK error group device link")
 	}
@@ -179,7 +179,7 @@ func (twin *MockDeviceTwin) GroupLinkDevice(orgID, name, clientID string) error 
 }
 
 // GroupUnlinkDevice mocks unlinking a device from a group
-func (twin *MockDeviceTwin) GroupUnlinkDevice(orgID, name, clientID string) error {
+func (twin *ManualMockDeviceTwin) GroupUnlinkDevice(orgID, name, clientID string) error {
 	if orgID == invalidDeviceIDString || name == invalidDeviceIDString || clientID == invalidDeviceIDString {
 		return fmt.Errorf("MOCK error group device unlink")
 	}
@@ -187,7 +187,7 @@ func (twin *MockDeviceTwin) GroupUnlinkDevice(orgID, name, clientID string) erro
 }
 
 // GroupGetDevices mocks retrieving the devices for a group
-func (twin *MockDeviceTwin) GroupGetDevices(orgID, name string) ([]messages.Device, error) {
+func (twin *ManualMockDeviceTwin) GroupGetDevices(orgID, name string) ([]messages.Device, error) {
 	if orgID == invalidDeviceIDString || name == invalidDeviceIDString {
 		return nil, fmt.Errorf("MOCK error group devices")
 	}
@@ -203,7 +203,7 @@ func (twin *MockDeviceTwin) GroupGetDevices(orgID, name string) ([]messages.Devi
 }
 
 // GroupGetExcludedDevices mocks retrieving the devices not in a group
-func (twin *MockDeviceTwin) GroupGetExcludedDevices(orgID, name string) ([]messages.Device, error) {
+func (twin *ManualMockDeviceTwin) GroupGetExcludedDevices(orgID, name string) ([]messages.Device, error) {
 	if orgID == invalidDeviceIDString || name == invalidDeviceIDString {
 		return nil, fmt.Errorf("MOCK error group excluded devices")
 	}

@@ -1,11 +1,11 @@
 package controller
 
 import (
+	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
-	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
 )
 
 func TestService_User(t *testing.T) {
@@ -48,10 +48,15 @@ func TestService_User(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
-			if err := srv.User(tt.args.orgID, tt.args.clientID, tt.args.user); (err != nil) != tt.wantErr {
-				t.Errorf("Service.User() test: error = %v, wantErr %v", err, tt.wantErr)
-			}
+			publishChan := make(chan mqtt.PublishMessage)
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
+			go func() {
+				if err := srv.User(tt.args.orgID, tt.args.clientID, tt.args.user); (err != nil) != tt.wantErr {
+					t.Errorf("Service.User() test: error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
+
+			_ = <-publishChan
 		})
 	}
 

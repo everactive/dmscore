@@ -21,7 +21,7 @@ package manage
 
 import (
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
-	mocks2 "github.com/everactive/dmscore/iot-devicetwin/service/controller/mocks"
+	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	mocks3 "github.com/everactive/dmscore/iot-management/datastore/mocks"
 	"github.com/stretchr/testify/mock"
@@ -54,7 +54,7 @@ func TestManagement_DeviceList(t *testing.T) {
 				manageDataStore.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(true)
 			}
 
-			deviceTwinController := &mocks2.Controller{}
+			deviceTwinController := &controller.MockController{}
 
 			devices := []messages.Device{}
 			if tt.want > 0 {
@@ -103,7 +103,7 @@ func TestManagement_DeviceGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		manageDataStoreMock := &mocks3.DataStore{}
-		deviceTwinControllerMock := &mocks2.Controller{}
+		deviceTwinControllerMock := &controller.MockController{}
 		manageDataStoreMock.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
 		hasAccess := false
@@ -154,7 +154,7 @@ func TestManagement_DeviceLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			manageDataStoreMock := &mocks3.DataStore{}
-			deviceTwinControllerMock := &mocks2.Controller{}
+			deviceTwinControllerMock := &controller.MockController{}
 			manageDataStoreMock.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
 			hasAccess := false
@@ -200,7 +200,7 @@ func TestManagement_DeviceUsersAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			manageDataStoreMock := &mocks3.DataStore{}
-			deviceTwinControllerMock := &mocks2.Controller{}
+			deviceTwinControllerMock := &controller.MockController{}
 			manageDataStoreMock.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
 			hasAccess := false
