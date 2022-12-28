@@ -25,7 +25,8 @@ import (
 	"errors"
 	"github.com/everactive/dmscore/config/keys"
 	domain2 "github.com/everactive/dmscore/iot-management/domain"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"path"
@@ -58,8 +59,8 @@ func TestService_OrganizationListHandler(t *testing.T) {
 			}
 			viper.Set(keys.JwtSecret, secret)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			if tt.wantErr == "" {
 				manageMock.On("OrganizationsForUser", tt.username).Return([]domain2.Organization{{}}, nil)
@@ -107,8 +108,8 @@ func TestService_OrganizationCreateHandler(t *testing.T) {
 			}
 			viper.Set(keys.JwtSecret, secret)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			if tt.wantErr != "OrgCreate" {
 				org := domain2.OrganizationCreate{}
@@ -162,8 +163,8 @@ func TestService_OrganizationUpdateHandler(t *testing.T) {
 			}
 			viper.Set(keys.JwtSecret, secret)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			if tt.wantErr == "" {
 				var org domain2.Organization
@@ -210,8 +211,8 @@ func TestService_OrganizationGetHandler(t *testing.T) {
 
 			createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			_, file := path.Split(tt.url)
 			if tt.wantErr == "" {
@@ -253,8 +254,8 @@ func TestService_OrganizationsForUserHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			if tt.wantErr == "" {
 				manageMock.On("OrganizationsForUser", tt.username).Return([]domain2.Organization{}, nil)
@@ -295,8 +296,8 @@ func TestService_OrganizationUpdateForUserHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			_, orgID := path.Split(tt.url)
 			if tt.wantErr == "" {

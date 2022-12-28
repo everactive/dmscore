@@ -23,7 +23,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/everactive/dmscore/iot-identity/web"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"testing"
 )
@@ -46,8 +47,8 @@ func TestService_RegDeviceList(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("RegDeviceList", tt.orgID, tt.username, tt.permissions).Return(web.DevicesResponse{})
 
@@ -87,8 +88,8 @@ func TestService_RegDeviceGet(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			if tt.wantErr == "" {
 				manageMock.On("RegDeviceGet", tt.orgID, tt.username, tt.permissions, tt.deviceID).Return(web.EnrollResponse{})
@@ -136,8 +137,8 @@ func TestService_RegisterDevice(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			if tt.wantErr == "" {
 				manageMock.On("RegisterDevice", tt.orgID, tt.username, tt.permissions, tt.data).Return(web.RegisterResponse{})
@@ -187,8 +188,8 @@ func TestService_RegDeviceUpdate(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			response := web.StandardResponse{Code: tt.wantErr}
 			manageMock.On("RegDeviceUpdate", tt.orgID, tt.username, tt.permissions, tt.deviceID, tt.data).Return(response)
@@ -229,8 +230,8 @@ func TestService_RegDeviceGetDownload(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			response := web.EnrollResponse{
 				StandardResponse: web.StandardResponse{Code: tt.wantErr},

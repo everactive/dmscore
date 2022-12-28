@@ -25,8 +25,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/iot-management/domain"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/everactive/dmscore/iot-management/web/usso"
+	"github.com/gin-gonic/gin"
 	"github.com/juju/usso/openid"
 	"github.com/stretchr/testify/mock"
 	"net/http"
@@ -55,8 +56,8 @@ func TestService_UserListHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			manageMock.On("UserList").Return([]domain.User{}, nil)
 			w := sendRequest("GET", tt.url, nil, wb, username, jwtSecret, tt.permissions)
@@ -99,8 +100,8 @@ func TestService_UserCreateHandler(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 			if tt.wantErr == "" {
 				manageMock.On("CreateUser", mock.Anything).Return(nil)
 			} else {
@@ -140,8 +141,8 @@ func TestService_UserGetHandler(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			_, username := path.Split(tt.url)
 			if tt.wantErr == "" {
@@ -190,8 +191,8 @@ func TestService_UserUpdateHandler(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			var user domain.User
 			if tt.unmarshalUser {
@@ -251,8 +252,8 @@ func TestService_UserDeleteHandler(t *testing.T) {
 
 			jwtSecret := createAndSetJWTSecret(t)
 
-			manageMock := &mocks.Manage{}
-			wb := NewService(manageMock)
+			manageMock := &manage.MockManage{}
+			wb := NewService(manageMock, gin.Default())
 
 			_, username := path.Split(tt.url)
 			user := domain.User{

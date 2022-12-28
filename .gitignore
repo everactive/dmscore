@@ -1,1 +1,3 @@
 ../config/config.yaml
+iot-management/service/manage/mock_Manage.go
+pkg/messages/*

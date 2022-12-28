@@ -2,9 +2,6 @@ version: '3'
 
 dotenv: ['{{.HOME}}/.device-management-env', '.env']
 
-includes:
-  dev: "./taskfiles/k8s-dev.yml"
-
 tasks:
   precommit:
     cmds:
@@ -47,3 +44,7 @@ tasks:
     cmds:
       - terraform-docs markdown table --output-file ./README.md ./deploy/
       - cd deploy && terraform fmt
+  update-mocks:
+    desc: Update the mockery mocks used in tihs project
+    cmds:
+      - mockery --dir service/manage --all --inpackage
