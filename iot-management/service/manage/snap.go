@@ -266,6 +266,28 @@ func (srv *Management) GetModelRequiredSnaps(orgID, username, modelName string, 
 	return &deviceModel, nil
 }
 
+var ErrModelNotFound = errors.New("model not found")
+var ErrRequiredSnapNotFound = errors.New("required snap not found")
+
+func (srv *Management) DeleteModelRequiredSnap(orgID, username, modelName, snapName string, role int) error {
+	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
+	if !hasAccess {
+		return NotAuthorizedErr
+	}
+
+	var deviceModel models.DeviceModel
+	tx := srv.DB.Find(&deviceModel, &models.DeviceModel{Name: modelName})
+
+	if tx.RowsAffected == 0 { return ErrModelNotFound }
+	if tx.Error != nil { return tx.Error }
+
+	tx = srv.DB.Delete(&models.DeviceModelRequiredSnap{DeviceModelID: deviceModel.ID, Name: snapName})
+	if tx.RowsAffected == 0 { return ErrRequiredSnapNotFound }
+	if tx.Error != nil { return tx.Error }
+
+	return nil
+}
+
 func (srv *Management) AddModelRequiredSnap(orgID, username, modelName, snapName string, role int) (*models.DeviceModelRequiredSnap, error) {
 	hasAccess := srv.DS.OrgUserAccess(orgID, username, role)
 	if !hasAccess {

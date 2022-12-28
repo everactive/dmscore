@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/api"
 	"github.com/everactive/dmscore/iot-management/datastore"
@@ -12,6 +13,25 @@ import (
 	"io"
 	"net/http"
 )
+
+var ErrUserInvalidOrNotAuthorized = errors.New("user is invalid or not authorized")
+var ErrDecodingBody = errors.New("error decoding body of request")
+
+func getModelRequiredSnap(c *gin.Context) (*messages.ModelRequiredSnap, error) {
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		return nil, ErrDecodingBody
+	}
+
+	var modelSnap messages.ModelRequiredSnap
+	err = json.Unmarshal(bodyBytes, &modelSnap)
+
+	if err != nil {
+		return nil, ErrDecodingBody
+	}
+
+	return &modelSnap, nil
+}
 
 func (h *HandlerService) AddRequiredModelSnap(c *gin.Context) {
 	user, err := web.GetUserFromContextAndCheckPermissions(c, datastore.Standard)
@@ -56,7 +76,36 @@ func (h *HandlerService) AddRequiredModelSnap(c *gin.Context) {
 }
 
 func (h *HandlerService) DeleteRequiredModelSnap(c *gin.Context) {
+	user, err := web.GetUserFromContextAndCheckPermissions(c, datastore.Standard)
+	if user == nil || err != nil {
+		response := api.StandardResponse{Code: "UserAuth", Message: ErrUserInvalidOrNotAuthorized.Error()}
+		c.JSON(http.StatusUnauthorized, &response)
+		return
+	}
 
+	requiredSnap, err := getModelRequiredSnap(c)
+	if err != nil {
+		if err == ErrDecodingBody {
+			response := api.StandardResponse{Code: "Error", Message: err.Error()}
+			c.JSON(http.StatusInternalServerError, &response)
+			return
+		} else {
+			response := api.StandardResponse{Code: "UserAuth"}
+			c.JSON(http.StatusUnauthorized, &response)
+			return
+		}
+	}
+
+	err = h.manage.DeleteModelRequiredSnap(c.Param("orgid"), user.Username, c.Param("model"), requiredSnap.Snap, user.Role)
+
+	if err != nil {
+		response := api.StandardResponse{Code: "Error", Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, &response)
+		return
+	}
+
+	response := api.StandardResponse{}
+	c.JSON(http.StatusOK, &response)
 }
 
 // RequiredModelSnaps gets the snaps currently required for a given model

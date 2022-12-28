@@ -80,6 +80,7 @@ type Manage interface {
 
 	AddModelRequiredSnap(orgID, username, modelName, snapName string, role int) (*models.DeviceModelRequiredSnap, error)
 	GetModelRequiredSnaps(orgID, username, modelName string, role int) (*models.DeviceModel, error)
+	DeleteModelRequiredSnap(orgID, username, modelName, snapName string, role int) error
 }
 
 // Management implementation of the management service use cases
