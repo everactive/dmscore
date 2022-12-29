@@ -29,7 +29,9 @@ import (
 )
 
 // CreateDataStore is the factory method to create a data store
-func CreateDataStore(databaseDriver string, dataStoreSource string) (datastore.DataStore, error) {
+var CreateDataStore = createDataStore
+
+func createDataStore(databaseDriver string, dataStoreSource string) (datastore.DataStore, error) {
 	var db datastore.DataStore
 	switch databaseDriver {
 	case "memory":

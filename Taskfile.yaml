@@ -16,23 +16,31 @@ tasks:
     desc: Installs the mockery mock generating tool
     cmds:
       - go install github.com/vektra/mockery/v2@v2.15.0
-  run-tests:
-    desc: Runs the unit tests, making sure everything is setup
+  test-prep:
     cmds:
       - task: update-mocks
       - task: generate-message-structs
+  run-tests:
+    desc: Runs the unit tests, making sure everything is setup
+    cmds:
+      - task: test-prep
       - go test ./...
   update-mocks:
     desc: Update mocks used by unit tests
     cmds:
       - mockery --dir iot-management/service/manage --all --inpackage
+      - mockery --dir iot-management/datastore --all --inpackage
+      - mockery --dir iot-devicetwin/datastore --all --inpackage
       - mockery --dir iot-devicetwin/service/controller --all --inpackage
       - mockery --dir iot-devicetwin/service/devicetwin --all --inpackage
+      - mockery --dir iot-devicetwin/service/mqtt --all --inpackage
+      - mockery --all --dir $(go env GOPATH)/pkg/mod/github.com/eclipse/paho.mqtt.golang@v1.2.0 --output mocks/external/mqtt
   generate-message-structs:
     desc: This will generate the Go structs from the schema definitions
     cmds:
       - mkdir -p pkg/messages
-      - schema-generate -o pkg/messages/messages.go -p messages ./schemas/rest.json
+      - schema-generate -o pkg/messages/messages.go -p messages ./schemas/schemas.json
+      - schema-generate -o pkg/messages/rest.go -p messages ./schemas/rest_schemas.json
   create-migration:
     desc: Creates a dmscore database migration (this is for the primary "management" database)
     cmds:
@@ -42,3 +50,23 @@ tasks:
           exit 1
         fi
         migrate create -ext sql -dir db/migrations $MIGRATION_NAME
+  test-race:
+    desc: Run race detection tests
+    cmds:
+      - task: test-prep
+      - rm -rf current
+      - mkdir -p current
+      - go test -count=1 -p 1 ./... -race
+  coverage:
+    desc: Generate a test coverage report
+    cmds:
+      - task: test-prep
+      - rm -rf current
+      - mkdir -p current
+      - go test -coverprofile coverage_report $(go list ./... | grep -v "vendor")
+      - |        
+        while read p; do
+          grep -v "${p}" ./coverage_report > ./coverage_report_tmp
+          mv ./coverage_report_tmp ./coverage_report
+        done <./exclude-from-code-coverage.txt
+      - go tool cover -func=coverage_report

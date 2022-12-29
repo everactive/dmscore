@@ -21,6 +21,7 @@ package controller
 
 import (
 	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
+	"sync"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
@@ -92,13 +93,17 @@ func TestService_DeviceLogs(t *testing.T) {
 	publishChan := make(chan mqtt.PublishMessage)
 	srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	var err error
 	go func() {
 		err = srv.DeviceLogs("abc", "a111", validLogData)
+		wg.Done()
 	}()
 
 	_ = <-publishChan
 
+	wg.Wait()
 	if err != nil {
 		t.Errorf("Service.DeviceLogs() got unexpected error = %v", err)
 		return

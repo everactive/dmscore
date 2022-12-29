@@ -25,7 +25,7 @@ import (
 	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/everactive/dmscore/iot-identity/service/mocks"
-	mocks4 "github.com/everactive/dmscore/iot-management/datastore/mocks"
+	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/stretchr/testify/mock"
 	"testing"
 )
@@ -48,7 +48,7 @@ func TestManagement_SnapList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 			deviceTwinController := &controller.MockController{}
 			srv := Management{
@@ -93,7 +93,7 @@ func TestManagement_SnapInstall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 			deviceTwinController := &controller.MockController{}
 			srv := Management{
@@ -134,7 +134,7 @@ func TestManagement_SnapRemove(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 			deviceTwinController := &controller.MockController{}
 			srv := Management{
@@ -177,7 +177,7 @@ func TestManagement_SnapUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 			deviceTwinController := &controller.MockController{}
 			srv := Management{
@@ -224,7 +224,7 @@ func TestManagement_SnapConfigSet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 			deviceTwinController := &controller.MockController{}
 			srv := Management{
@@ -266,7 +266,7 @@ func TestManagement_SnapSnapshot(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 			deviceTwinController := &controller.MockController{}
 			srv := Management{

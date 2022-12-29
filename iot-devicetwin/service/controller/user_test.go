@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
+	"sync"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
@@ -50,13 +51,18 @@ func TestService_User(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			publishChan := make(chan mqtt.PublishMessage)
 			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
+
+			var wg sync.WaitGroup
+			wg.Add(1)
 			go func() {
 				if err := srv.User(tt.args.orgID, tt.args.clientID, tt.args.user); (err != nil) != tt.wantErr {
 					t.Errorf("Service.User() test: error = %v, wantErr %v", err, tt.wantErr)
 				}
+				wg.Done()
 			}()
 
 			_ = <-publishChan
+			wg.Wait()
 		})
 	}
 

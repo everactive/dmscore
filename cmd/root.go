@@ -87,7 +87,7 @@ var runCommand = cobra.Command{
 
 		ids := createIdentityService()
 
-		dts, controller := devicetwin2.New(ds)
+		dts, controller := devicetwin2.New(ds, db)
 
 		// Create the main services
 		srv := manage.NewManagement(db, ds, twinAPI, identityAPI, controller, ids.Identity)

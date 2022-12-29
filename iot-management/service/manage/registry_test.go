@@ -23,7 +23,7 @@ import (
 	"errors"
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/everactive/dmscore/iot-identity/service/mocks"
-	mocks4 "github.com/everactive/dmscore/iot-management/datastore/mocks"
+	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/stretchr/testify/mock"
 	"testing"
 
@@ -48,7 +48,7 @@ func TestManagement_RegDeviceList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			identityMock := &mocks.Identity{}
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 
 			if tt.wantErr {
 				manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(false)
@@ -98,7 +98,7 @@ func TestManagement_RegisterDevice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(!tt.wantErr)
@@ -140,7 +140,7 @@ func TestManagement_RegDeviceGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(!tt.wantErr)

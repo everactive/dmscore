@@ -21,6 +21,7 @@ package controller
 
 import (
 	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
+	"sync"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
@@ -133,15 +134,21 @@ func TestService_DeviceSnapUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			publishChan := make(chan mqtt.PublishMessage)
 			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
+
+			var wg sync.WaitGroup
+			wg.Add(1)
 			go func() {
 				if err := srv.DeviceSnapUpdate(tt.args.orgID, tt.args.clientID, tt.args.snap, tt.args.action, tt.args.snapUpdate); (err != nil) != tt.wantErr {
 					t.Errorf("Service.DeviceSnapUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				}
+				wg.Done()
 			}()
 
 			if !tt.wantErr {
 				_ = <-publishChan
 			}
+
+			wg.Wait()
 		})
 	}
 }
@@ -164,6 +171,7 @@ func TestService_DeviceSnapConf(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			publishChan := make(chan mqtt.PublishMessage)
 			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
+
 			go func() {
 				if err := srv.DeviceSnapConf(tt.args.orgID, tt.args.clientID, tt.args.snap, tt.args.settings); (err != nil) != tt.wantErr {
 					t.Errorf("Service.DeviceSnapConf() error = %v, wantErr %v", err, tt.wantErr)
@@ -191,6 +199,7 @@ func TestService_DeviceSnapList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			publishChan := make(chan mqtt.PublishMessage)
 			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
+
 			go func() {
 				if err := srv.DeviceSnapList(tt.args.orgID, tt.args.clientID); (err != nil) != tt.wantErr {
 					t.Errorf("Service.DeviceSnapList() error = %v, wantErr %v", err, tt.wantErr)
@@ -227,13 +236,19 @@ func TestService_DeviceSnapServiceAction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			publishChan := make(chan mqtt.PublishMessage)
 			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
+
+			var wg sync.WaitGroup
+			wg.Add(1)
 			go func() {
 				if err := srv.DeviceSnapServiceAction(tt.args.orgID, tt.args.clientID, tt.args.snap, tt.args.action, tt.args.services); (err != nil) != tt.wantErr {
 					t.Errorf("Service.DeviceSnapServiceAction() error = %v, wantErr %v", err, tt.wantErr)
 				}
+				wg.Done()
 			}()
 
 			_ = <-publishChan
+
+			wg.Wait()
 		})
 	}
 }
@@ -248,11 +263,17 @@ func TestService_DeviceSnapShot(t *testing.T) {
 	srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
 
 	var err error
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		err = srv.DeviceSnapSnapshot("abc", "a111", "helloworld", validLogData)
+		wg.Done()
 	}()
 
 	_ = <-publishChan
+
+	wg.Wait()
 
 	if err != nil {
 		t.Errorf("Service.DeviceLogs() got unexpected error = %v", err)

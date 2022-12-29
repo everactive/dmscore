@@ -50,9 +50,9 @@ func TestService_ActionHandler(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		{"valid", fields{&mqtt.MockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{}}},
-		{"error-response", fields{&mqtt.MockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m1}}},
-		{"invalid-action", fields{&mqtt.MockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.MockClient{}, &mqtt.MockMessage{Message: m2}}},
+		{"valid", fields{&mqtt.ManualMockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.ManualMockClient{}, &mqtt.ManualMockMessage{}}},
+		{"error-response", fields{&mqtt.ManualMockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.ManualMockClient{}, &mqtt.ManualMockMessage{Message: m1}}},
+		{"invalid-action", fields{&mqtt.ManualMockConnect{}, &devicetwin.ManualMockDeviceTwin{}}, args{&mqtt.ManualMockClient{}, &mqtt.ManualMockMessage{Message: m2}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -86,12 +86,12 @@ func TestService_HealthHandler(t *testing.T) {
 		args   args
 		want   int
 	}{
-		{name: "valid", args: args{msg: &mqtt.MockMessage{Message: m1}, orgID: "abc", deviceID: "aa111", existingDevice: true}},
-		{name: "invalid-message", args: args{msg: &mqtt.MockMessage{}}},
-		{name: "invalid-clientID", args: args{msg: &mqtt.MockMessage{Message: m2}}},
+		{name: "valid", args: args{msg: &mqtt.ManualMockMessage{Message: m1}, orgID: "abc", deviceID: "aa111", existingDevice: true}},
+		{name: "invalid-message", args: args{msg: &mqtt.ManualMockMessage{}}},
+		{name: "invalid-clientID", args: args{msg: &mqtt.ManualMockMessage{Message: m2}}},
 		{name: "new-clientID",
 			args: args{
-				msg:           &mqtt.MockMessage{Message: m3, TopicPath: "device/health/new-device"},
+				msg:           &mqtt.ManualMockMessage{Message: m3, TopicPath: "device/health/new-device"},
 				deviceID:      "new-device",
 				orgID:         "abc",
 				waitOnChannel: true,
@@ -174,7 +174,7 @@ func Test_getClientID(t *testing.T) {
 		args args
 		want string
 	}{
-		{"valid", args{&mqtt.MockMessage{}}, "aa111"},
+		{"valid", args{&mqtt.ManualMockMessage{}}, "aa111"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

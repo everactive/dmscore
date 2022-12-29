@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Schema definitions for the REST API",
+  "description": "The schema definitions for the messages passed between the agent and the device twin service",
+  "definitions": {
+    "snapService": {
+      "type": "object",
+      "properties": {
+        "services": {
+          "description": "A list of services within the snap to take action on (or empty to apply to all)",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "snapUpdate": {
+      "type": "object",
+      "properties": {
+        "data": { "type":  "string" }
+      }
+    },
+    "snapSnapshot": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "description": "A presigned S3 url to PUT a snapshot of a snap to",
+          "type": "string"
+        }
+      }
+    },
+    "deviceLogs": {
+      "type": "object",
+      "properties": {
+          "url": {
+            "description": "A presigned S3 url to PUT logs to",
+            "type": "string"
+          },
+          "limit": {
+              "description": "The max number of logs to pull down from snapd api.",
+              "type": "integer"
+          }
+      }
+    },
+    "deviceUser": {
+      "description": "",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "What action to take on the provided user",
+          "type":  "string",
+          "enum": ["create", "remove"]
+        },
+        "email": {
+          "description": "Ubuntu SSO email to use when creating a user",
+          "type": "string"
+        },
+        "sudoer": {
+          "description": "Flag to indicate that the user being created should have sudoer access",
+          "type":"boolean"
+        },
+        "force-managed": {
+          "description":"Force the creation of the user even if the device is managed by a single user",
+          "type":"boolean"
+        },
+        "username": {
+          "description":"What username to remove from the device",
+          "type":"string"
+        }
+      }
+    },
+    "modelRequiredSnap": {
+      "type": "object",
+      "properties": {
+        "snap": {
+          "description": "A snap that is required for a given model",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

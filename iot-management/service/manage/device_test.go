@@ -23,7 +23,6 @@ import (
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
 	"github.com/everactive/dmscore/iot-management/datastore"
-	mocks3 "github.com/everactive/dmscore/iot-management/datastore/mocks"
 	"github.com/stretchr/testify/mock"
 	"testing"
 )
@@ -45,7 +44,7 @@ func TestManagement_DeviceList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStore := &mocks3.DataStore{}
+			manageDataStore := &datastore.MockDataStore{}
 			manageDataStore.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
 			if tt.wantErr == "DevicesAuth" {
@@ -102,7 +101,7 @@ func TestManagement_DeviceGet(t *testing.T) {
 		{"invalid-user", args{"abc", "invalid", 200, "b222"}, "", "DeviceAuth"},
 	}
 	for _, tt := range tests {
-		manageDataStoreMock := &mocks3.DataStore{}
+		manageDataStoreMock := &datastore.MockDataStore{}
 		deviceTwinControllerMock := &controller.MockController{}
 		manageDataStoreMock.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
@@ -153,7 +152,7 @@ func TestManagement_DeviceLogs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks3.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			deviceTwinControllerMock := &controller.MockController{}
 			manageDataStoreMock.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
@@ -199,7 +198,7 @@ func TestManagement_DeviceUsersAction(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks3.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			deviceTwinControllerMock := &controller.MockController{}
 			manageDataStoreMock.On("OrganizationsForUser", mock.Anything).Return([]datastore.Organization{}, nil)
 
