@@ -1,6 +1,6 @@
 module github.com/everactive/dmscore
 
-go 1.17
+go 1.19
 
 require (
 	github.com/benbjohnson/clock v1.0.3
@@ -23,6 +23,7 @@ require (
 	github.com/spf13/viper v1.11.0
 	github.com/stretchr/testify v1.7.1
 	github.com/thejerf/suture/v4 v4.0.2
+	golang.org/x/exp v0.0.0-20230127193734-31bee513bff7
 	gopkg.in/errgo.v1 v1.0.1
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/gorm v1.22.4
@@ -74,7 +75,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
-	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect

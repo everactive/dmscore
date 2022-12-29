@@ -11,13 +11,13 @@ import (
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/actions"
 	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
-	devicetwinfactory "github.com/everactive/dmscore/iot-devicetwin/service/factory"
 	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
 	devicetwinweb "github.com/everactive/dmscore/iot-devicetwin/web"
 	"github.com/everactive/dmscore/iot-identity/service/cert"
-	"github.com/everactive/dmscore/iot-management/datastore"
+	identityweb "github.com/everactive/dmscore/iot-identity/web"
 	"github.com/everactive/dmscore/models"
+	datastore2 "github.com/everactive/dmscore/pkg/datastores"
 	"github.com/everactive/dmscore/pkg/messages"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -60,9 +60,11 @@ type Service struct {
 	db                   *gorm.DB
 	controller           controller.Controller
 	twin                 devicetwin.DeviceTwin
+	identity             *identityweb.IdentityService
+	datastore            datastore2.ConsolidatedDataStore
 }
 
-var GetMQTTConnecion = getMQTTConnection
+var GetMQTTConnection = getMQTTConnection
 
 func getMQTTConnection(url, port string, connect *devicetwinconfig.MQTTConnect, service *Service) (*mqtt.Connection, error) {
 	return mqtt.GetConnection(url, port, connect, func(c MQTT.Client) {
@@ -75,16 +77,8 @@ func getMQTTConnection(url, port string, connect *devicetwinconfig.MQTTConnect, 
 
 var newSuperVisor = func(name string) *suture.Supervisor { return suture.NewSimple(name) }
 
-func New(coreDB datastore.DataStore, db *gorm.DB) (*suture.Supervisor, controller.Controller) {
-	sup := newSuperVisor("devicetiwn") //suture.NewSimple("devicetwin")
-
-	databaseDriver := viper.GetString(keys.GetDeviceTwinKey(keys.DatabaseDriver))
-	dataStoreSource := viper.GetString(keys.GetDeviceTwinKey(keys.DatabaseConnectionString))
-
-	devicetwinDataStore, err := devicetwinfactory.CreateDataStore(databaseDriver, dataStoreSource)
-	if err != nil {
-		logger.Fatalf("Error connecting to data store: %v", err)
-	}
+func New(identity *identityweb.IdentityService, dss *datastore2.DataStores) (*suture.Supervisor, controller.Controller) {
+	sup := newSuperVisor("devicetwin") //suture.NewSimple("devicetwin")
 
 	URL := viper.GetString(keys.MQTTURL)
 	port := viper.GetString(keys.MQTTPort)
@@ -131,7 +125,7 @@ func New(coreDB datastore.DataStore, db *gorm.DB) (*suture.Supervisor, controlle
 	legacyActionChan := make(chan MQTT.Message, defaultChannelBufferSize)
 	legacyPublishChan := make(chan mqtt.PublishMessage, defaultChannelBufferSize)
 
-	twin := devicetwin.NewService(devicetwinDataStore, coreDB)
+	twin := devicetwin.NewService(dss.DeviceTwinStore, dss.ManagementStore)
 	ctrl := controller.NewService(legacyHealthChan, legacyActionChan, legacyPublishChan, twin)
 
 	servicePort := viper.GetString(keys.GetDeviceTwinKey(keys.ServicePort))
@@ -143,14 +137,15 @@ func New(coreDB datastore.DataStore, db *gorm.DB) (*suture.Supervisor, controlle
 		healthChan:           make(chan MQTT.Message, defaultChannelBufferSize),
 		publishChan:          make(chan mqtt.PublishMessage, defaultChannelBufferSize),
 		actionChan:           make(chan MQTT.Message, defaultChannelBufferSize),
-		db:                   db,
+		db:                   dss.GetDatabase(),
 		twin:                 twin,
 		controller:           ctrl,
+		identity:             identity,
 	}
 
 	// Set up the MQTT client and handle pub/sub from here... as the MQTT and DeviceTwin services are mutually dependent
 	// The onconnect handler will subscribe on both new connection and reconnection
-	m, err := GetMQTTConnecion(URL, port, &c, service)
+	m, err := GetMQTTConnection(URL, port, &c, service)
 
 	if err != nil {
 		logger.Fatalf("Error connecting to MQTT broker: %v", err)
@@ -162,8 +157,11 @@ func New(coreDB datastore.DataStore, db *gorm.DB) (*suture.Supervisor, controlle
 	service.legacyActionChan = legacyActionChan
 	service.legacyPublishChan = legacyPublishChan
 
+	installService := NewInstallService(dss, legacyPublishChan)
+
 	sup.Add(service)
 	sup.Add(ctrl)
+	sup.Add(installService)
 
 	return sup, w.Controller
 }
@@ -296,11 +294,11 @@ func (srv *Service) actionMessageHandler(msg MQTT.Message) error {
 			}
 
 			// OK- we have our health hash entry, update it
-			tx = srv.db.Updates(&models.HealthHash{
+			tx = srv.db.Model(&healthHashes).Updates(&models.HealthHash{
 				DeviceID:           healthHashes.DeviceID,
 				SnapListHash:       versionedPublishSnaps.Result.SnapListHash,
 				InstalledSnapsHash: versionedPublishSnaps.Result.InstalledSnapsHash,
-				LastRefresh:        rtClock.Now(),
+				LastRefresh:        time.Now(),
 			})
 
 			if tx.Error != nil {
@@ -366,7 +364,7 @@ func (srv *Service) healthMessageHandler(msg MQTT.Message) error {
 
 	if tx.RowsAffected == 0 {
 		srv.db.Create(&models.HealthHash{
-			LastRefresh:        rtClock.Now(),
+			LastRefresh:        time.Now(),
 			OrgID:              healthMessage.OrgId,
 			DeviceID:           healthMessage.DeviceId,
 			SnapListHash:       healthMessage.SnapListHash,
@@ -376,11 +374,14 @@ func (srv *Service) healthMessageHandler(msg MQTT.Message) error {
 		return nil
 	}
 
-	// Do the health hashes match?
-	if healthHashes.SnapListHash == healthMessage.SnapListHash && healthHashes.InstalledSnapsHash == healthMessage.InstalledSnapsHash {
+	refreshOnAnyChanges := viper.GetBool(keys.RefreshSnapListOnAnyChange)
+
+	if healthHashes.SnapListHash == healthMessage.SnapListHash &&
+		(healthHashes.InstalledSnapsHash == healthMessage.InstalledSnapsHash || (healthHashes.InstalledSnapsHash != healthMessage.InstalledSnapsHash && !refreshOnAnyChanges)) {
 		// Just update and return
-		healthHashes.LastRefresh = rtClock.Now()
-		srv.db.Updates(healthHashes)
+		srv.db.Model(&healthHashes).Updates(&models.HealthHash{LastRefresh: time.Now()})
+		log.Infof("Update health hash last refresh time for %s to now. SnapListHash=%s and InstallSnapsHash=%s",
+			healthHashes.DeviceID, healthHashes.SnapListHash, healthHashes.InstalledSnapsHash)
 		return nil
 	}
 

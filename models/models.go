@@ -19,9 +19,9 @@ type DeviceModelRequiredSnap struct {
 
 type HealthHash struct {
 	gorm.Model
-	LastRefresh time.Time 
-	OrgID string
-	DeviceID string
-	SnapListHash string
+	LastRefresh        time.Time
+	OrgID              string
+	DeviceID           string
+	SnapListHash       string
 	InstalledSnapsHash string
 }

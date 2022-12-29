@@ -17,6 +17,7 @@ import (
 	"github.com/everactive/dmscore/iot-management/datastore"
 	mocks "github.com/everactive/dmscore/mocks/external/mqtt"
 	"github.com/everactive/dmscore/models"
+	"github.com/everactive/dmscore/pkg/datastores"
 	"github.com/everactive/dmscore/pkg/messages"
 	migrate2 "github.com/everactive/dmscore/pkg/migrate"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
@@ -80,7 +81,7 @@ func TestNew(t *testing.T) {
 				t.Error(err)
 			}
 
-			GetMQTTConnecion = func(url, port string, connect *config.MQTTConnect, service *Service) (*mqtt.Connection, error) {
+			GetMQTTConnection = func(url, port string, connect *config.MQTTConnect, service *Service) (*mqtt.Connection, error) {
 				return nil, nil
 			}
 
@@ -95,7 +96,12 @@ func TestNew(t *testing.T) {
 				return service
 			}
 
-			got, got1 := New(tt.args.coreDB, tt.args.db)
+			got, got1 := New(nil, &datastores.DataStores{
+				IdentityStore:   nil,
+				DeviceTwinStore: nil,
+				ManagementStore: nil,
+				DataStore:       nil,
+			})
 			if !reflect.DeepEqual(got, tt.wantSupervisor) {
 				t.Errorf("New() got = %v, want %v", got, tt.wantSupervisor)
 			}

@@ -3,10 +3,13 @@
 version: '3'
 
 tasks:
+  build:
+    cmds:
+      - go build bin/dmscore/dmscore.go && rm ./dmscore
   build-and-run-tests:
     desc: Smoke test (for compilation) to build the binary and run the tests
     cmds:
-      - go build bin/dmscore/dmscore.go && rm ./dmscore
+      - task: build
       - task: run-tests
   install-schema-generate:
     desc: Installs the schema-generate tool
@@ -30,10 +33,12 @@ tasks:
     cmds:
       - mockery --dir iot-management/service/manage --all --inpackage
       - mockery --dir iot-management/datastore --all --inpackage
+      - mockery --dir iot-identity/datastore --all --inpackage
       - mockery --dir iot-devicetwin/datastore --all --inpackage
       - mockery --dir iot-devicetwin/service/controller --all --inpackage
       - mockery --dir iot-devicetwin/service/devicetwin --all --inpackage
       - mockery --dir iot-devicetwin/service/mqtt --all --inpackage
+      - mockery --dir pkg/datastores --all --inpackage
       - mockery --all --dir $(go env GOPATH)/pkg/mod/github.com/eclipse/paho.mqtt.golang@v1.2.0 --output mocks/external/mqtt
   generate-message-structs:
     desc: This will generate the Go structs from the schema definitions

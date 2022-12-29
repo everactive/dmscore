@@ -9,19 +9,14 @@ import (
 	"github.com/everactive/dmscore/config/keys"
 	identitydatastore "github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/service"
-	identityfactory "github.com/everactive/dmscore/iot-identity/service/factory"
 	identityweb "github.com/everactive/dmscore/iot-identity/web"
-	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/identityapi"
-	"github.com/everactive/dmscore/iot-management/service/factory"
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/everactive/dmscore/iot-management/twinapi"
-	migrate2 "github.com/everactive/dmscore/pkg/migrate"
+	datastores2 "github.com/everactive/dmscore/pkg/datastores"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"os"
 	"os/signal"
 	"syscall"
@@ -69,7 +64,12 @@ var runCommand = cobra.Command{
 
 		loadStoreIDs()
 
-		db, ds, err := createManagementDatastore()
+		dataStores, err := datastores2.New()
+		if err != nil {
+			// We are in a catastrophic failure state if we cannot create datastores,
+			// the only option here is to exit, hope things resolve or require manual intervention
+			return err
+		}
 
 		deviceTwinAPIURL := viper.GetString(keys.DeviceTwinAPIURL)
 		// Initialize the device twin client
@@ -85,19 +85,19 @@ var runCommand = cobra.Command{
 			log.Fatalf("Error connecting to the identity service: %v", err)
 		}
 
-		ids := createIdentityService()
+		ids := createIdentityService(dataStores.IdentityStore)
 
-		dts, controller := devicetwin2.New(ds, db)
+		dts, controller := devicetwin2.New(ids, dataStores)
 
 		// Create the main services
-		srv := manage.NewManagement(db, ds, twinAPI, identityAPI, controller, ids.Identity)
+		srv := manage.NewManagement(dataStores, twinAPI, identityAPI, controller, ids.Identity)
 
 		supervisorSpec := suture.Spec{}
 		sup := suture.New("dmscore", supervisorSpec)
 
 		sup.Add(ids)
 		sup.Add(dts)
-		sup.Add(web2.New(srv, db))
+		sup.Add(web2.New(srv, dataStores.GetDatabase()))
 
 		ctx := context.Background()
 		ctx, cancelCtx := context.WithCancel(ctx)
@@ -148,72 +148,9 @@ func loadStoreIDs() {
 	}
 }
 
-func createManagementDatastore() (*gorm.DB, datastore.DataStore, error) {
-	// Open the connection to the local database
-	databaseDriver := viper.GetString(keys.DatabaseDriver)
-	dataSource := viper.GetString(keys.DatabaseConnectionString)
-	log.Infof("Connecting to %s with connection string %s", databaseDriver, dataSource)
-
-	// Create gorm database to use with the datastore
-	// Open the database connection
-	db, err := gorm.Open(postgres.Open(dataSource), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Error opening the database: %v\n", err)
-	}
-
-	// Check that we have a valid database connection
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatalf("Error accessing the database: %v\n", err)
-	}
-	err = sqlDB.Ping()
-	if err != nil {
-		log.Fatalf("Error accessing the database: %v\n", err)
-	}
-
-	ds, err := factory.CreateDataStoreWithDB(db, databaseDriver)
-	if err != nil || db == nil {
-		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataSource)
-		return nil, nil, err
-	}
-
-	return db, ds, err
-}
-
-func CreateIdentityDataStore() (identitydatastore.DataStore, error) {
-	// Open the connection to the local database
-	databaseDriver := viper.GetString(keys.GetIdentityKey(keys.DatabaseDriver))
-	dataStoreSource := viper.GetString(keys.GetIdentityKey(keys.DatabaseConnectionString))
-
-	log.Infof("Connecting to %s with connection string %s", databaseDriver, dataStoreSource)
-	identitydatastore.Logger = log.StandardLogger()
-	db, err := identityfactory.CreateDataStore(databaseDriver, dataStoreSource)
-	if err != nil || db == nil {
-		log.Fatalf("Error accessing data store: %v, with database source %s", databaseDriver, dataStoreSource)
-		// This satisfies an IDE's nil logic check
-		return nil, err
-	}
-
-	sourceURL := viper.GetString(keys.GetIdentityKey(keys.MigrationsSourceURL))
-	databaseName := viper.GetString(keys.GetIdentityKey(keys.DatabaseName))
-	err = migrate2.Run(dataStoreSource, databaseDriver, fmt.Sprintf("file://%s", sourceURL), databaseName)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
-func createIdentityService() *identityweb.IdentityService {
-	db, err := CreateIdentityDataStore()
-	if err != nil || db == nil {
-		log.Fatalf("Error accessing data store: %v", err)
-		// This satisfies an IDE's nil logic check
-		return nil
-	}
-
+func createIdentityService(ds identitydatastore.DataStore) *identityweb.IdentityService {
 	service.Logger = log.StandardLogger()
-	srv := service.NewIdentityService(db)
+	srv := service.NewIdentityService(ds)
 
 	// Start the web service
 	identityweb.Logger = log.StandardLogger()

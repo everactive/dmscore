@@ -88,10 +88,10 @@ func (srv *Service) Unscoped() UnscopedController {
 
 // Service implementation of the devicetwin service use cases
 type Service struct {
-	DeviceTwin devicetwin.DeviceTwin
-	unscoped   bool
-	healthChan <-chan MQTT.Message
-	actionChan <-chan MQTT.Message
+	DeviceTwin  devicetwin.DeviceTwin
+	unscoped    bool
+	healthChan  <-chan MQTT.Message
+	actionChan  <-chan MQTT.Message
 	publishChan chan<- mqtt.PublishMessage
 }
 
@@ -117,10 +117,10 @@ func (srv *Service) Serve(ctx context.Context) error {
 			return nil
 		case <-intervalTicker.C:
 			log.Infof("%s still ticking", "DeviceTwinControllerService")
-		case a := <- srv.actionChan:
+		case a := <-srv.actionChan:
 			log.Infof("Processing action channel message: %s", string(a.Payload()))
 			srv.ActionHandler(a)
-		case h := <- srv.healthChan:
+		case h := <-srv.healthChan:
 			log.Infof("Processing health channel message: %s", string(h.Payload()))
 			srv.HealthHandler(h)
 		}
@@ -187,9 +187,11 @@ func (srv *Service) HealthHandler(msg MQTT.Message) {
 	}
 
 	// Update the device record
-	if err := srv.DeviceTwin.HealthHandler(h); err == nil {
+	if err2 := srv.DeviceTwin.HealthHandler(h); err2 == nil {
 		// Exit if successful
 		return
+	} else {
+		log.Error(err2)
 	}
 
 	// We don't have the device details, so request them from the device
