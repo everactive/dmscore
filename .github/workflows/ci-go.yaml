@@ -14,8 +14,14 @@ jobs:
         with:
           go-version: 1.19
 
+      - run: go install github.com/go-task/task/v3/cmd/task@latest
+      - run: task install-mockery
+      - run: task install-schema-generate
+
+      - run: task generate-message-structs
+
       - name: Build
         run: go build -v bin/dmscore/dmscore.go
 
       - name: Test
-        run: go test -v ./...
+        run: task run-tests
