@@ -7,20 +7,16 @@ import (
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/config/keys"
-	"github.com/everactive/dmscore/iot-identity/config/configkey"
 	identitydatastore "github.com/everactive/dmscore/iot-identity/datastore"
 	"github.com/everactive/dmscore/iot-identity/service"
 	identityfactory "github.com/everactive/dmscore/iot-identity/service/factory"
 	identityweb "github.com/everactive/dmscore/iot-identity/web"
-	"github.com/everactive/dmscore/iot-management/auth"
 	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/everactive/dmscore/iot-management/identityapi"
 	"github.com/everactive/dmscore/iot-management/service/factory"
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/everactive/dmscore/iot-management/twinapi"
-	"github.com/everactive/dmscore/iot-management/web"
 	migrate2 "github.com/everactive/dmscore/pkg/migrate"
-	"github.com/everactive/ginkeycloak"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,7 +24,6 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	// this is needed for migrate
@@ -97,40 +92,6 @@ var runCommand = cobra.Command{
 		// Create the main services
 		srv := manage.NewManagement(db, ds, twinAPI, identityAPI, controller, ids.Identity)
 
-		// Figure out what our auth provider is (keycloak or legacy static client token)
-		authProvider := strings.ToLower(viper.GetString(keys.AuthProvider))
-		authDisabled := viper.GetBool(keys.DisableAuth)
-		if authProvider == "disabled" && authDisabled {
-			log.Infof("Auth is disabled and auth provider is set to disabled, using static-client for requests with no auth checking")
-			web.VerifyTokenAndUser = func(authorizationToken string, wb web.Service) (datastore.User, error) {
-				return datastore.User{
-					Username: "static-client",
-					Role:     datastore.Superuser,
-				}, nil
-			}
-		} else {
-			log.Infof("Auth provider: %s", authProvider)
-			if authProvider == "static-client" {
-				staticClientToken := viper.GetString(keys.StaticClientToken)
-				if staticClientToken != "" {
-					auth.CreateServiceClientUser(ds, "static-client")
-					web.VerifyTokenAndUser = auth.VerifyStaticClientToken //nolint
-				} else {
-					log.Error("Static client token is empty, not properly configured for using static client")
-				}
-			} else if authProvider == "keycloak" {
-				clientID := viper.GetString(configkey.OAuth2ClientID)
-				secret := viper.GetString(configkey.OAuth2ClientSecret)
-				host := viper.GetString(configkey.OAuth2HostName)
-				port := viper.GetString(configkey.OAuth2HostPort)
-				scheme := viper.GetString(configkey.OAuth2HostScheme)
-				tokenIntrospectPath := viper.GetString(configkey.OAuth2TokenIntrospectPath)
-				requiredScope := viper.GetString(configkey.OAuth2ClientRequiredScope)
-
-				a := ginkeycloak.New(clientID, secret, host, port, scheme, requiredScope, tokenIntrospectPath, log.StandardLogger())
-				web.VerifyTokenAndUser = auth.VerifyKeycloakTokenWithAuth(a)
-			}
-		}
 		supervisorSpec := suture.Spec{}
 		sup := suture.New("dmscore", supervisorSpec)
 

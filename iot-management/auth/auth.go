@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/everactive/dmscore/config/keys"
+	"github.com/everactive/dmscore/iot-management/service/manage"
 	"net/url"
 
 	"github.com/everactive/dmscore/iot-management/datastore"
@@ -53,19 +54,16 @@ func TokenGetter() *ginkeycloak.TokenGetter {
 }
 
 // CreateServiceClientUser creates a user account for a service-account if it does not exist previously
-func CreateServiceClientUser(ds datastore.DataStore, clientName string) {
+func CreateServiceClientUser(ms manage.Manage, clientName string) {
 	log.Infof("Using an access token, checking to see if %s user exists", clientName)
-	user, err := ds.GetUser(clientName)
+	user, err := ms.GetUser(clientName)
 	if err != nil {
 		log.Infof("%s does not exist, creating", clientName)
-		createdUser, err := ds.CreateUser(datastore.User{
-			Username: clientName,
-			Role:     datastore.Superuser,
-		})
+		err := ms.CreateUser(domain.User{Username: clientName, Role: datastore.Superuser})
 		if err != nil {
 			panic(err)
 		} else {
-			log.Infof("user created: %+v", createdUser)
+			log.Infof("user %s created", clientName)
 		}
 	} else {
 		log.Infof("user exists: %+v", user)
