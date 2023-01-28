@@ -36,12 +36,6 @@ type StandardResponse struct {
 	Message string `json:"message"`
 }
 
-// OrganizationsResponse is the JSON response from a organization list API method
-type OrganizationsResponse struct {
-	StandardResponse
-	Organizations []domain.Organization `json:"organizations"`
-}
-
 // DevicesResponse is the JSON response from a device list API method
 type DevicesResponse struct {
 	StandardResponse
@@ -68,33 +62,6 @@ func formatStandardResponse(code, message string, w http.ResponseWriter) {
 	if len(code) > 0 {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-
-	// Encode the response as JSON
-	encodeResponse(w, response)
-}
-
-// formatOrganizationsResponse returns a JSON response from an organizations API method
-func formatOrganizationsResponse(orgs []domain.Organization, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", JSONHeader)
-	response := OrganizationsResponse{StandardResponse{}, orgs}
-
-	// Encode the response as JSON
-	encodeResponse(w, response)
-}
-
-// formatDevicesResponse returns a JSON response from an organizations API method
-func formatDevicesResponse(items []domain.Enrollment, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", JSONHeader)
-	response := DevicesResponse{StandardResponse{}, items}
-
-	// Encode the response as JSON
-	encodeResponse(w, response)
-}
-
-// formatRegisterResponse returns a JSON response from a register API method
-func formatRegisterResponse(id string, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", JSONHeader)
-	response := RegisterResponse{StandardResponse{}, id}
 
 	// Encode the response as JSON
 	encodeResponse(w, response)

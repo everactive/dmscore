@@ -22,7 +22,6 @@ package twinapi
 
 import (
 	"bytes"
-	"github.com/everactive/dmscore/iot-devicetwin/web"
 	"net/url"
 	"path"
 
@@ -34,29 +33,12 @@ import (
 
 // Client is a client for the device twin API
 type Client interface {
-	//DeviceList(orgID string) web.DevicesResponse
-	//DeviceGet(orgID, deviceID string) web.DeviceResponse
-	//DeviceDelete(orgID, deviceID string) web.StandardResponse
-	//DeviceLogs(orgID, deviceID string, body []byte) web.StandardResponse
-	//DeviceUsersAction(orgID, deviceID string, body []byte) web.StandardResponse
-
-	ActionList(orgID, deviceID string) web.ActionsResponse
-	SnapList(orgID, deviceID string) web.SnapsResponse
-
-	SnapSnapshot(orgID, deviceID, snap string, body []byte) web.StandardResponse
-	SnapListOnDevice(orgID, deviceID string) web.StandardResponse
-	SnapInstall(orgID, deviceID, snap string) web.StandardResponse
-	SnapRemove(orgID, deviceID, snap string) web.StandardResponse
-	SnapUpdate(orgID, deviceID, snap, action string, body []byte) web.StandardResponse
-	SnapConfigSet(orgID, deviceID, snap string, config []byte) web.StandardResponse
-	SnapServiceAction(orgID, deviceID, snap, action string, body []byte) web.StandardResponse
-
-	GroupList(orgID string) web.GroupsResponse
-	GroupCreate(orgID string, body []byte) web.StandardResponse
-	GroupDevices(orgID, name string) web.DevicesResponse
-	GroupExcludedDevices(orgID, name string) web.DevicesResponse
-	GroupDeviceLink(orgID, name, deviceID string) web.StandardResponse
-	GroupDeviceUnlink(orgID, name, deviceID string) web.StandardResponse
+	//GroupList(orgID string) web.GroupsResponse
+	//GroupCreate(orgID string, body []byte) web.StandardResponse
+	//GroupDevices(orgID, name string) web.DevicesResponse
+	//GroupExcludedDevices(orgID, name string) web.DevicesResponse
+	//GroupDeviceLink(orgID, name, deviceID string) web.StandardResponse
+	//GroupDeviceUnlink(orgID, name, deviceID string) web.StandardResponse
 }
 
 // ClientAdapter adapts our expectations to device twin API
