@@ -22,15 +22,12 @@ package manage
 import (
 	"encoding/json"
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
-	mocks2 "github.com/everactive/dmscore/iot-devicetwin/service/controller/mocks"
+	"github.com/everactive/dmscore/iot-devicetwin/service/controller"
 	"github.com/everactive/dmscore/iot-identity/domain"
 	"github.com/everactive/dmscore/iot-identity/service/mocks"
-	mocks4 "github.com/everactive/dmscore/iot-management/datastore/mocks"
-	"github.com/everactive/dmscore/iot-management/identityapi"
+	"github.com/everactive/dmscore/iot-management/datastore"
 	"github.com/stretchr/testify/mock"
 	"testing"
-
-	"github.com/everactive/dmscore/iot-management/twinapi"
 )
 
 func TestManagement_SnapList(t *testing.T) {
@@ -51,10 +48,17 @@ func TestManagement_SnapList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
-			deviceTwinController := &mocks2.Controller{}
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, identityMock)
+			deviceTwinController := &controller.MockController{}
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             identityMock,
+			}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(tt.wantErr == "")
 			identityMock.On("DeviceGet", mock.Anything, mock.Anything).Return(&domain.Enrollment{Organization: domain.Organization{ID: tt.args.orgID}}, nil)
@@ -89,10 +93,17 @@ func TestManagement_SnapInstall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
-			deviceTwinController := &mocks2.Controller{}
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, identityMock)
+			deviceTwinController := &controller.MockController{}
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             identityMock,
+			}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(tt.wantErr == "")
 			deviceTwinController.On("DeviceSnapInstall", mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -123,10 +134,17 @@ func TestManagement_SnapRemove(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
-			deviceTwinController := &mocks2.Controller{}
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, identityMock)
+			deviceTwinController := &controller.MockController{}
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             identityMock,
+			}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(tt.wantErr == "")
 			deviceTwinController.On("DeviceSnapRemove", tt.args.orgID, tt.args.deviceID, tt.args.snap).Return(nil)
@@ -159,10 +177,17 @@ func TestManagement_SnapUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
-			deviceTwinController := &mocks2.Controller{}
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, identityMock)
+			deviceTwinController := &controller.MockController{}
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             identityMock,
+			}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(tt.wantErr == "")
 			var snapUpdate messages.SnapUpdate
@@ -199,10 +224,17 @@ func TestManagement_SnapConfigSet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
-			deviceTwinController := &mocks2.Controller{}
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, identityMock)
+			deviceTwinController := &controller.MockController{}
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             identityMock,
+			}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(tt.wantErr == "")
 			deviceTwinController.On("DeviceSnapConf", tt.args.orgID, tt.args.deviceID, tt.args.snap, string(tt.args.config)).Return(nil)
@@ -234,10 +266,17 @@ func TestManagement_SnapSnapshot(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manageDataStoreMock := &mocks4.DataStore{}
+			manageDataStoreMock := &datastore.MockDataStore{}
 			identityMock := &mocks.Identity{}
-			deviceTwinController := &mocks2.Controller{}
-			srv := NewManagement(manageDataStoreMock, &twinapi.MockClient{}, &identityapi.MockIdentity{}, deviceTwinController, identityMock)
+			deviceTwinController := &controller.MockController{}
+			srv := Management{
+				DS:                   manageDataStoreMock,
+				DB:                   nil,
+				TwinAPI:              nil,
+				IdentityAPI:          nil,
+				DeviceTwinController: deviceTwinController,
+				Identity:             identityMock,
+			}
 
 			manageDataStoreMock.On("OrgUserAccess", mock.Anything, mock.Anything, mock.Anything).Return(tt.wantErr == "")
 			var snapSnapshot messages.SnapSnapshot

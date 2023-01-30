@@ -21,11 +21,13 @@
 package web
 
 import (
+	"context"
 	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/juju/usso"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -38,34 +40,44 @@ const JSONHeader = "application/json; charset=UTF-8"
 // Service is the implementation of the web API
 type Service struct {
 	Manage manage.Manage
+	engine *gin.Engine
+	runErr error
 }
 
 // NewService returns a new web controller
-func NewService(srv manage.Manage) *Service {
+func NewService(srv manage.Manage, engine *gin.Engine) *Service {
 	s := &Service{
 		Manage: srv,
+		engine: engine,
 	}
 
 	AuthMiddleWare = s.authMiddleWare()
 
-	return s
-}
+	s.router(engine)
 
-// Run starts the web service
-func (wb Service) Run() {
 	servicePort := viper.GetString(keys.ServicePort)
 	log.Info("Starting service on port : ", servicePort)
 
 	ssoServer = &usso.ProductionUbuntuSSOServer
 
-	r := gin.Default()
+	go func() {
+		s.runErr = s.engine.Run(":" + servicePort)
+	}()
 
-	r.Use(gin.Logger())
+	return s
+}
 
-	wb.router(r)
+// Run starts the web service
+func (wb Service) Serve(ctx context.Context) error {
+	intervalTicker := time.NewTicker(60 * time.Second)
 
-	err := r.Run(":" + servicePort)
-	if err != nil {
-		panic(err)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("We're done: %s", ctx.Err())
+			return wb.runErr
+		case <-intervalTicker.C:
+			log.Infof("%s still ticking", "DeviceTwinService")
+		}
 	}
 }

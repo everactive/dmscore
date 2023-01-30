@@ -36,7 +36,7 @@ func getConnection() (*Connection, error) {
 
 func TestGetConnection(t *testing.T) {
 	p1 := `{"id":"a1", "action":"device", "success":true, "message":"", "result": {"orgId":"abc", "deviceId":"d444", "brand":"example", "model":"drone-1000", "serial":"d444"}}`
-	client = &MockClient{}
+	client = &ManualMockClient{}
 
 	tests := []struct {
 		name    string

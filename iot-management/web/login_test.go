@@ -26,8 +26,9 @@ import (
 	"fmt"
 	"github.com/everactive/dmscore/config"
 	"github.com/everactive/dmscore/iot-management/domain"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
 	mocks2 "github.com/everactive/dmscore/mocks/external/openid"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/url"
 	"testing"
@@ -54,13 +55,13 @@ func (t *TestSSOServer) GetAccounts(_ *usso.SSOData) (string, error) {
 func TestLoginHandlerAPIClient(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	manageMock := &mocks.Manage{}
+	manageMock := &manage.MockManage{}
 	nonceStoreMock := &mocks2.NonceStore{}
 
 	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
 	manageMock.On("GetUser", "jamesj").Return(domain.User{Role: 100}, nil)
 
-	wb := NewService(manageMock)
+	wb := NewService(manageMock, gin.Default())
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -98,13 +99,13 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	manageMock := &mocks.Manage{}
+	manageMock := &manage.MockManage{}
 	nonceStoreMock := &mocks2.NonceStore{}
 
 	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
 	manageMock.On("GetUser", "franktester").Return(domain.User{}, errors.New("user does not exist"))
 
-	wb := NewService(manageMock)
+	wb := NewService(manageMock, gin.Default())
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -136,13 +137,13 @@ func TestLoginHandlerAccountsUserDNE(t *testing.T) {
 
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	manageMock := &mocks.Manage{}
+	manageMock := &manage.MockManage{}
 	nonceStoreMock := &mocks2.NonceStore{}
 
 	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
 	manageMock.On("GetUser", username).Return(domain.User{}, errors.New("user does not exist"))
 
-	wb := NewService(manageMock)
+	wb := NewService(manageMock, gin.Default())
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -172,7 +173,7 @@ func TestLoginHandlerAccountsUserDNE(t *testing.T) {
 func TestLoginHandlerAccountsError(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	wb := NewService(&mocks.Manage{})
+	wb := NewService(&manage.MockManage{}, gin.Default())
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -211,7 +212,7 @@ func TestLoginHandlerAccountsError(t *testing.T) {
 func TestLoginHandlerTokenInvalidOrError(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	wb := NewService(&mocks.Manage{})
+	wb := NewService(&manage.MockManage{}, gin.Default())
 
 	ssodata := usso.SSOData{
 		ConsumerKey:    "consumer-key",
@@ -252,13 +253,13 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	manageMock := &mocks.Manage{}
+	manageMock := &manage.MockManage{}
 	nonceStoreMock := &mocks2.NonceStore{}
 
 	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
 	manageMock.On("GetUser", username).Return(domain.User{Role: role}, nil)
 
-	wb := NewService(manageMock)
+	wb := NewService(manageMock, gin.Default())
 
 	ts := TestSSOServer{
 		TokenIsValid: false,
@@ -311,12 +312,12 @@ func TestLoginHandlerAPIClientNoBodyOrMalformed(t *testing.T) {
 func TestLoginHandlerUSSORedirect(t *testing.T) {
 	// Mock the services
 	config.LoadConfig("../testing/memory.yaml")
-	manageMock := &mocks.Manage{}
+	manageMock := &manage.MockManage{}
 	nonceStoreMock := &mocks2.NonceStore{}
 
 	manageMock.On("OpenIDNonceStore").Return(nonceStoreMock)
 
-	wb := NewService(manageMock)
+	wb := NewService(manageMock, gin.Default())
 
 	w := sendRequest("GET", "/login", nil, wb, "jamesj", viper.GetString(keys.JwtSecret), 100)
 

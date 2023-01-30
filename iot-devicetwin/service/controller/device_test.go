@@ -20,11 +20,12 @@
 package controller
 
 import (
+	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
+	"sync"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
-	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
 )
 
 func TestService_DeviceGet(t *testing.T) {
@@ -41,7 +42,7 @@ func TestService_DeviceGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			got, err := srv.DeviceGet(tt.args.orgID, tt.args.clientID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeviceGet() error = %v, wantErr %v", err, tt.wantErr)
@@ -69,7 +70,7 @@ func TestService_DeviceList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			got, err := srv.DeviceList(tt.args.orgID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeviceList() error = %v, wantErr %v", err, tt.wantErr)
@@ -89,9 +90,20 @@ func TestService_DeviceLogs(t *testing.T) {
 		Limit: 200,
 	}
 
-	srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
-	err := srv.DeviceLogs("abc", "a111", validLogData)
+	publishChan := make(chan mqtt.PublishMessage)
+	srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}, publishChan: publishChan}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+	var err error
+	go func() {
+		err = srv.DeviceLogs("abc", "a111", validLogData)
+		wg.Done()
+	}()
+
+	_ = <-publishChan
+
+	wg.Wait()
 	if err != nil {
 		t.Errorf("Service.DeviceLogs() got unexpected error = %v", err)
 		return

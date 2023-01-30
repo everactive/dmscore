@@ -22,7 +22,8 @@ package web
 import (
 	"github.com/everactive/dmscore/config/keys"
 	"github.com/everactive/dmscore/iot-devicetwin/web"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"testing"
@@ -54,11 +55,11 @@ func TestService_DeviceHandlers(t *testing.T) {
 			}
 			viper.Set(keys.JwtSecret, secret)
 
-			manageMock := &mocks.Manage{}
+			manageMock := &manage.MockManage{}
 			manageMock.On("DeviceList", mock.Anything, mock.Anything, mock.Anything).Return(web.DevicesResponse{})
 			manageMock.On("DeviceGet", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(web.DeviceResponse{})
 
-			wb := NewService(manageMock)
+			wb := NewService(manageMock, gin.Default())
 			w := sendRequest("GET", tt.url, nil, wb, "jamesj", secret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)
@@ -95,10 +96,10 @@ func TestService_ActionListHandler(t *testing.T) {
 			}
 			viper.Set(keys.JwtSecret, secret)
 
-			manageMock := &mocks.Manage{}
+			manageMock := &manage.MockManage{}
 			manageMock.On("ActionList", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(web.ActionsResponse{})
 
-			wb := NewService(manageMock)
+			wb := NewService(manageMock, gin.Default())
 			w := sendRequest("GET", tt.url, nil, wb, "jamesj", secret, tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)

@@ -59,10 +59,13 @@
     },
     "health": {
       "type": "object",
+      "required": ["orgId", "deviceId", "refresh"],
       "properties": {
-        "orgId":            { "type":  "string" },
-        "deviceId":         { "type":  "string" },
-        "refresh":          { "type":  "string", "format": "date-time" }
+        "orgId":              { "type":  "string" },
+        "deviceId":           { "type":  "string" },
+        "refresh":            { "type":  "string", "format": "date-time" },
+        "snapListHash":       { "type":  "string" },
+        "installedSnapsHash": { "type":  "string" }
       }
     },
     "publishDevice": {
@@ -113,6 +116,41 @@
         "message":         { "type":  "string" },
         "result": {
           "type":  "array",
+          "items": { "$ref": "#/definitions/deviceSnap" }
+        }
+      }
+    },
+    "versionedMessage": {
+      "type": "object",
+      "required": ["id", "version","action", "success", "message"],
+      "properties": {
+        "id":              { "type":  "string" },
+        "version": {"type": "string", "enum":  ["0", "2"]},
+        "action":          { "type":  "string" },
+        "success":         { "type":  "boolean" },
+        "message":         { "type":  "string" }
+      }
+    },
+    "publishSnapsV2": {
+      "type": "object",
+      "required": ["id", "version","action", "success", "message", "result"],
+      "properties": {
+        "id":              { "type":  "string" },
+        "version": {"type": "string", "enum":  ["0", "2"]},
+        "action":          { "type":  "string" },
+        "success":         { "type":  "boolean" },
+        "message":         { "type":  "string" },
+        "result": { "$ref": "#/definitions/publishSnapsV2Result" }
+      }
+    },
+    "publishSnapsV2Result": {
+      "type":  "object",
+      "required": [ "snapListHash", "installedSnapHash" ],
+      "properties": {
+        "snapListHash": { "type": "string" },
+        "installedSnapsHash": { "type": "string" },
+        "snaps": {
+          "type": "array",
           "items": { "$ref": "#/definitions/deviceSnap" }
         }
       }

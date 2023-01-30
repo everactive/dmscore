@@ -20,7 +20,7 @@
 package devicetwin
 
 import (
-	"github.com/everactive/dmscore/iot-management/datastore/mocks"
+	"github.com/everactive/dmscore/iot-management/datastore"
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore/memory"
@@ -44,7 +44,7 @@ func TestService_HealthHandler(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore(), &mocks.DataStore{})
+			srv := NewService(memory.NewStore(), &datastore.MockDataStore{})
 			if err := srv.HealthHandler(localtt.args.payload); (err != nil) != localtt.wantErr {
 				t.Errorf("Service.HealthHandler() error = %v, wantErr %v", err, localtt.wantErr)
 			}
@@ -101,7 +101,7 @@ func TestService_ActionResponse(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore(), &mocks.DataStore{})
+			srv := NewService(memory.NewStore(), &datastore.MockDataStore{})
 			if err := srv.ActionResponse(localtt.args.clientID, "a1", localtt.args.action, localtt.args.payload); (err != nil) != localtt.wantErr {
 				t.Errorf("Service.ActionResponse() error = %v, wantErr %v", err, localtt.wantErr)
 			}
@@ -130,7 +130,7 @@ func TestService_ActionCreate(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore(), &mocks.DataStore{})
+			srv := NewService(memory.NewStore(), &datastore.MockDataStore{})
 			if err := srv.ActionCreate(localtt.args.orgID, localtt.args.deviceID, localtt.args.action); (err != nil) != localtt.wantErr {
 				t.Errorf("Service.ActionCreate() error = %v, wantErr %v", err, localtt.wantErr)
 			}
@@ -155,7 +155,7 @@ func TestService_GroupWorkflow(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore(), &mocks.DataStore{})
+			srv := NewService(memory.NewStore(), &datastore.MockDataStore{})
 			if err := srv.GroupCreate(localtt.args.orgID, localtt.args.name); (err != nil) != localtt.wantErr {
 				t.Errorf("Service.GroupCreate() error = %v, wantErr %v", err, localtt.wantErr)
 			}
@@ -189,7 +189,7 @@ func TestService_GroupLinkWorkflow(t *testing.T) {
 	for _, tt := range tests {
 		localtt := tt
 		t.Run(localtt.name, func(t *testing.T) {
-			srv := NewService(memory.NewStore(), &mocks.DataStore{})
+			srv := NewService(memory.NewStore(), &datastore.MockDataStore{})
 
 			// Get a group
 			group, err := srv.GroupGet(localtt.args.orgID, localtt.args.name)

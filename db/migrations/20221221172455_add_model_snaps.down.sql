@@ -1,0 +1,4 @@
+DROP INDEX idx_device_model_required_snaps_deleted_at;
+DROP TABLE device_model_required_snaps;
+DROP INDEX idx_device_models_deleted_at;
+DROP TABLE device_models;

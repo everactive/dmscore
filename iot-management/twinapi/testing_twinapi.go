@@ -29,10 +29,10 @@ const (
 	testInstalledSize = 3000
 )
 
-//nolint
+// nolint
 type MockClient struct{}
 
-//nolint
+// nolint
 func (m *MockClient) DeviceList(orgID string) web.DevicesResponse {
 	return web.DevicesResponse{
 		StandardResponse: web.StandardResponse{},
@@ -44,7 +44,7 @@ func (m *MockClient) DeviceList(orgID string) web.DevicesResponse {
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) DeviceGet(orgID, deviceID string) web.DeviceResponse {
 	return web.DeviceResponse{
 		StandardResponse: web.StandardResponse{},
@@ -52,7 +52,7 @@ func (m *MockClient) DeviceGet(orgID, deviceID string) web.DeviceResponse {
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) ActionList(orgID, deviceID string) web.ActionsResponse {
 	return web.ActionsResponse{
 		StandardResponse: web.StandardResponse{},
@@ -62,7 +62,7 @@ func (m *MockClient) ActionList(orgID, deviceID string) web.ActionsResponse {
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapList(orgID, deviceID string) web.SnapsResponse {
 	return web.SnapsResponse{
 		StandardResponse: web.StandardResponse{},
@@ -70,32 +70,32 @@ func (m *MockClient) SnapList(orgID, deviceID string) web.SnapsResponse {
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapListOnDevice(orgID, deviceID string) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapInstall(orgID, deviceID, snap string) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapRemove(orgID, deviceID, snap string) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapUpdate(orgID, deviceID, snap, action string, body []byte) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapConfigSet(orgID, deviceID, snap string, config []byte) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) GroupList(orgID string) web.GroupsResponse {
 	return web.GroupsResponse{
 		StandardResponse: web.StandardResponse{},
@@ -103,7 +103,7 @@ func (m *MockClient) GroupList(orgID string) web.GroupsResponse {
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) GroupDevices(orgID, name string) web.DevicesResponse {
 	return web.DevicesResponse{
 		StandardResponse: web.StandardResponse{},
@@ -113,7 +113,7 @@ func (m *MockClient) GroupDevices(orgID, name string) web.DevicesResponse {
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) GroupExcludedDevices(orgID, name string) web.DevicesResponse {
 	return web.DevicesResponse{
 		StandardResponse: web.StandardResponse{},
@@ -124,12 +124,12 @@ func (m *MockClient) GroupExcludedDevices(orgID, name string) web.DevicesRespons
 	}
 }
 
-//nolint
+// nolint
 func (m *MockClient) GroupCreate(orgID string, body []byte) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) GroupDeviceLink(orgID, name, deviceID string) web.StandardResponse {
 	if orgID == "invalid" || deviceID == "invalid" {
 		return web.StandardResponse{Code: "GroupDevice", Message: "MOCK error link"}
@@ -137,7 +137,7 @@ func (m *MockClient) GroupDeviceLink(orgID, name, deviceID string) web.StandardR
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) GroupDeviceUnlink(orgID, name, deviceID string) web.StandardResponse {
 	if orgID == "invalid" || deviceID == "invalid" {
 		return web.StandardResponse{Code: "GroupDevice", Message: "MOCK error unlink"}
@@ -145,27 +145,27 @@ func (m *MockClient) GroupDeviceUnlink(orgID, name, deviceID string) web.Standar
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapSnapshot(orgID, deviceID, snap string, body []byte) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) DeviceLogs(orgID, deviceID string, body []byte) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) DeviceUsersAction(orgID, deviceID string, body []byte) web.StandardResponse {
 	return web.StandardResponse{}
 }
 
-//nolint
+// nolint
 func (m *MockClient) DeviceDelete(orgID, deviceID string) web.StandardResponse {
 	panic("implement me")
 }
 
-//nolint
+// nolint
 func (m *MockClient) SnapServiceAction(orgID, deviceID, snap, action string, body []byte) web.StandardResponse {
 	panic("implement me")
 }

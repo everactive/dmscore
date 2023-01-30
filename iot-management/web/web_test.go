@@ -58,11 +58,7 @@ func sendRequest(method, url string, data io.Reader, srv *Service, username, jwt
 		log.Fatalf("Error creating JWT: %v", err)
 	}
 
-	r := gin.Default()
-
-	srv.router(r)
-
-	r.ServeHTTP(w, req)
+	srv.engine.ServeHTTP(w, req)
 
 	return w
 }

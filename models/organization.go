@@ -11,3 +11,13 @@ type Organization struct {
 func (Organization) TableName() string {
 	return "organization"
 }
+
+type OrganizationUser struct {
+	ID       uint `gorm:"primarykey"`
+	OrgID    string
+	UserName string `gorm:"column:username"`
+}
+
+func (OrganizationUser) TableName() string {
+	return "organization_user"
+}

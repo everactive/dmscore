@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
-	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
 )
 
 func TestService_GroupCreate(t *testing.T) {
@@ -40,7 +39,7 @@ func TestService_GroupCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			if err := srv.GroupCreate(tt.args.orgID, tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupCreate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -62,7 +61,7 @@ func TestService_GroupList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			got, err := srv.GroupList(tt.args.orgID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupList() error = %v, wantErr %v", err, tt.wantErr)
@@ -89,7 +88,7 @@ func TestService_GroupGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			got, err := srv.GroupGet(tt.args.orgID, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupGet() error = %v, wantErr %v", err, tt.wantErr)
@@ -119,7 +118,7 @@ func TestService_GroupLinkDevice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			if err := srv.GroupLinkDevice(tt.args.orgID, tt.args.name, tt.args.clientID); (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupLinkDevice() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -142,7 +141,7 @@ func TestService_GroupUnlinkDevice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			if err := srv.GroupUnlinkDevice(tt.args.orgID, tt.args.name, tt.args.clientID); (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupUnlinkDevice() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -165,7 +164,7 @@ func TestService_GroupGetDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			got, err := srv.GroupGetDevices(tt.args.orgID, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupGetDevices() error = %v, wantErr %v", err, tt.wantErr)
@@ -193,7 +192,7 @@ func TestService_GroupGetExcludedDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := Service{MQTT: &mqtt.MockConnect{}, DeviceTwin: &devicetwin.MockDeviceTwin{}}
+			srv := Service{DeviceTwin: &devicetwin.ManualMockDeviceTwin{}}
 			got, err := srv.GroupGetExcludedDevices(tt.args.orgID, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.GroupGetExcludedDevices() error = %v, wantErr %v", err, tt.wantErr)

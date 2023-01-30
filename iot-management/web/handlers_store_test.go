@@ -22,7 +22,8 @@ package web
 import (
 	"fmt"
 	"github.com/everactive/dmscore/config/keys"
-	"github.com/everactive/dmscore/iot-management/service/manage/mocks"
+	"github.com/everactive/dmscore/iot-management/service/manage"
+	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -50,7 +51,7 @@ func TestService_StoreSearchHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockGET(`[{}]`)
 
-			wb := NewService(&mocks.Manage{})
+			wb := NewService(&manage.MockManage{}, gin.Default())
 			w := sendRequest("GET", tt.url, nil, wb, "jamesj", viper.GetString(keys.JwtSecret), tt.permissions)
 			if w.Code != tt.want {
 				t.Errorf("Expected HTTP status '%d', got: %v", tt.want, w.Code)

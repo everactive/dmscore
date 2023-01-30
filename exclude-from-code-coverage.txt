@@ -1,0 +1,5 @@
+mock_
+testing_
+github.com/everactive/dmscore/iot-management/datastore/memory
+github.com/everactive/dmscore/iot-identity/datastore/memory
+github.com/everactive/dmscore/iot-devicetwin/datastore/memory

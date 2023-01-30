@@ -92,6 +92,17 @@ const (
 	OAuth2HostPort = "service.oauth2.host.port"
 	// OAuth2HostScheme the scheme for the auth provider (only https should be used)
 	OAuth2HostScheme = "service.oauth2.host.scheme"
+	// DefaultServiceHeartbeat is the default duration between service heartbeats in the logs (info)
+	DefaultServiceHeartbeat = "service.default.heartbeat"
+	// RequiredSnapsInstallServiceCheckInterval is the interval in which the install service will start or
+	// refresh the checker service which in turn iterates over all the devices to see if they are missing snaps
+	RequiredSnapsInstallServiceCheckInterval = "service.install.interval"
+	// RefreshSnapListOnAnyChange controls whether a snap list is requested if any changes in snaps are detected
+	RefreshSnapListOnAnyChange = "service.refresh-snaps-any-change"
+	// RequiredSnapsCheckInterval is the time, if the required snaps checker is running, between each device that it
+	// checks to see if it needs snaps that are required (it doesn't have them installed),
+	// 10 devices checked = 1s if this value is 100ms
+	RequiredSnapsCheckInterval = "service.install-required-snaps-check.interval"
 )
 
 func GetIdentityKey(key string) string {

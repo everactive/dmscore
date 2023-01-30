@@ -30,7 +30,10 @@ import (
 	"github.com/everactive/dmscore/iot-management/domain"
 	"github.com/everactive/dmscore/iot-management/identityapi"
 	"github.com/everactive/dmscore/iot-management/twinapi"
+	"github.com/everactive/dmscore/models"
+	"github.com/everactive/dmscore/pkg/datastores"
 	"github.com/juju/usso/openid"
+	"gorm.io/gorm"
 )
 
 // Manage interface for the service
@@ -63,23 +66,29 @@ type Manage interface {
 	SnapConfigSet(orgID, username string, role int, deviceID, snap string, config []byte) web.StandardResponse
 	SnapServiceAction(orgID, username string, role int, deviceID, snap, action string, body []byte) web.StandardResponse
 
-	GroupList(orgID, username string, role int) web.GroupsResponse
-	GroupCreate(orgID, username string, role int, body []byte) web.StandardResponse
-	GroupDevices(orgID, username string, role int, name string) web.DevicesResponse
-	GroupExcludedDevices(orgID, username string, role int, name string) web.DevicesResponse
-	GroupDeviceLink(orgID, username string, role int, name, deviceID string) web.StandardResponse
-	GroupDeviceUnlink(orgID, username string, role int, name, deviceID string) web.StandardResponse
+	//GroupList(orgID, username string, role int) web.GroupsResponse
+	//GroupCreate(orgID, username string, role int, body []byte) web.StandardResponse
+	//GroupDevices(orgID, username string, role int, name string) web.DevicesResponse
+	//GroupExcludedDevices(orgID, username string, role int, name string) web.DevicesResponse
+	//GroupDeviceLink(orgID, username string, role int, name, deviceID string) web.StandardResponse
+	//GroupDeviceUnlink(orgID, username string, role int, name, deviceID string) web.StandardResponse
 
 	OrganizationsForUser(username string) ([]domain.Organization, error)
 	OrganizationForUserToggle(orgID, username string) error
 	OrganizationGet(orgID string) (domain.Organization, error)
 	OrganizationCreate(org domain.OrganizationCreate) error
 	OrganizationUpdate(org domain.Organization) error
+
+	AddModelRequiredSnap(orgID, username, modelName, snapName string, role int) (*models.DeviceModelRequiredSnap, error)
+	GetModelRequiredSnaps(orgID, username, modelName string, role int) (*models.DeviceModel, error)
+	DeleteModelRequiredSnap(orgID, username, modelName, snapName string, role int) error
 }
 
 // Management implementation of the management service use cases
 type Management struct {
-	DB                   datastore.DataStore
+	DSS                  *datastores.DataStores
+	DS                   datastore.DataStore
+	DB                   *gorm.DB
 	TwinAPI              twinapi.Client
 	IdentityAPI          identityapi.Client
 	DeviceTwinController controller.Controller
@@ -87,9 +96,10 @@ type Management struct {
 }
 
 // NewManagement creates an implementation of the management use cases
-func NewManagement(db datastore.DataStore, api twinapi.Client, id identityapi.Client, dtc controller.Controller, ids service.Identity) *Management {
+func NewManagement(dss *datastores.DataStores, api twinapi.Client, id identityapi.Client, dtc controller.Controller, ids service.Identity) *Management {
 	return &Management{
-		DB:                   db,
+		DSS:                  dss,
+		DS:                   dss.ManagementStore,
 		TwinAPI:              api,
 		IdentityAPI:          id,
 		DeviceTwinController: dtc,

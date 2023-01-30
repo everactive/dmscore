@@ -20,22 +20,20 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
-
-	"github.com/everactive/dmscore/iot-devicetwin/config/keys"
-	"github.com/spf13/viper"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/actions"
 
 	"github.com/everactive/dmscore/iot-devicetwin/pkg/messages"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/everactive/dmscore/iot-devicetwin/config"
 	"github.com/everactive/dmscore/iot-devicetwin/domain"
 	"github.com/everactive/dmscore/iot-devicetwin/service/devicetwin"
 	"github.com/everactive/dmscore/iot-devicetwin/service/mqtt"
@@ -50,8 +48,8 @@ type UnscopedController interface {
 // Controller interface for the service
 type Controller interface {
 	// MQTT handlers
-	HealthHandler(client MQTT.Client, msg MQTT.Message)
-	ActionHandler(client MQTT.Client, msg MQTT.Message)
+	HealthHandler(msg MQTT.Message)
+	ActionHandler(msg MQTT.Message)
 
 	// Passthrough to the device twin service
 	DeviceSnaps(orgID, clientID string) ([]messages.DeviceSnap, error)
@@ -90,57 +88,49 @@ func (srv *Service) Unscoped() UnscopedController {
 
 // Service implementation of the devicetwin service use cases
 type Service struct {
-	MQTT       mqtt.Connect
-	DeviceTwin devicetwin.DeviceTwin
-	unscoped   bool
+	DeviceTwin  devicetwin.DeviceTwin
+	unscoped    bool
+	healthChan  <-chan MQTT.Message
+	actionChan  <-chan MQTT.Message
+	publishChan chan<- mqtt.PublishMessage
 }
 
 // NewService creates an implementation of the devicetwin use cases
-func NewService(url, port string, connect *config.MQTTConnect, twin devicetwin.DeviceTwin) *Service {
+func NewService(healthChan chan MQTT.Message, actionChan <-chan MQTT.Message, publishChan chan<- mqtt.PublishMessage, twin devicetwin.DeviceTwin) *Service {
 	srv := &Service{
-		DeviceTwin: twin,
+		DeviceTwin:  twin,
+		healthChan:  healthChan,
+		actionChan:  actionChan,
+		publishChan: publishChan,
 	}
-
-	// Setup the MQTT client and handle pub/sub from here... as the MQTT and DeviceTwin services are mutually dependent
-	// The onconnect handler will subscribe on both new connection and reconnection
-	m, err := mqtt.GetConnection(url, port, connect, func(c MQTT.Client) {
-		log.Println("Connecting to MQTT, subscribing to actions")
-		if err := srv.SubscribeToActions(); err != nil {
-			log.Fatalf("error establishing MQTT subscriptions: %s", err)
-		}
-	})
-
-	if err != nil {
-		log.Fatalf("Error connecting to MQTT broker: %v", err)
-	}
-	srv.MQTT = m
 
 	return srv
 }
 
-// SubscribeToActions subscribes to the published topics from the devices
-func (srv *Service) SubscribeToActions() error {
+func (srv *Service) Serve(ctx context.Context) error {
+	intervalTicker := time.NewTicker(60 * time.Second)
 
-	healthTopic := viper.GetString(keys.MQTTHealthTopic)
-	pubTopic := viper.GetString(keys.MQTTPubTopic)
-
-	// Subscribe to the device health messages
-	if err := srv.MQTT.Subscribe(healthTopic, srv.HealthHandler); err != nil {
-		log.Printf("Error subscribing to topic `%s`: %v", healthTopic, err)
-		return err
-	}
-
-	// Subscribe to the device action responses
-	if err := srv.MQTT.Subscribe(pubTopic, srv.ActionHandler); err != nil {
-		log.Printf("Error subscribing to topic `%s`: %v", pubTopic, err)
-		return err
+	for {
+		select {
+		case <-ctx.Done():
+			log.Errorf("We're done: %s", ctx.Err())
+			return nil
+		case <-intervalTicker.C:
+			log.Infof("%s still ticking", "DeviceTwinControllerService")
+		case a := <-srv.actionChan:
+			log.Infof("Processing action channel message: %s", string(a.Payload()))
+			srv.ActionHandler(a)
+		case h := <-srv.healthChan:
+			log.Infof("Processing health channel message: %s", string(h.Payload()))
+			srv.HealthHandler(h)
+		}
 	}
 
 	return nil
 }
 
 // ActionHandler is the handler for the main subscription topic
-func (srv *Service) ActionHandler(client MQTT.Client, msg MQTT.Message) {
+func (srv *Service) ActionHandler(msg MQTT.Message) {
 	clientID := getClientID(msg)
 	log.Printf("Action response from %s", clientID)
 
@@ -164,7 +154,7 @@ func (srv *Service) ActionHandler(client MQTT.Client, msg MQTT.Message) {
 }
 
 // HealthHandler is the handler for the devices health messages
-func (srv *Service) HealthHandler(client MQTT.Client, msg MQTT.Message) {
+func (srv *Service) HealthHandler(msg MQTT.Message) {
 	clientID := getClientID(msg)
 	log.Printf("Health update from %s", clientID)
 
@@ -197,9 +187,11 @@ func (srv *Service) HealthHandler(client MQTT.Client, msg MQTT.Message) {
 	}
 
 	// Update the device record
-	if err := srv.DeviceTwin.HealthHandler(h); err == nil {
+	if err2 := srv.DeviceTwin.HealthHandler(h); err2 == nil {
 		// Exit if successful
 		return
+	} else {
+		log.Error(err2)
 	}
 
 	// We don't have the device details, so request them from the device
@@ -229,10 +221,12 @@ func getClientID(msg MQTT.Message) string {
 	return parts[2]
 }
 
+var generateKSUID = ksuid.New
+
 // triggerActionOnDevice triggers an action on the device via MQTT
 func (srv *Service) triggerActionOnDevice(orgID, deviceID string, act messages.SubscribeAction) error {
 	// Generate a request ID
-	id := ksuid.New()
+	id := generateKSUID()
 	act.Id = id.String()
 
 	// Serialize the action
@@ -244,7 +238,9 @@ func (srv *Service) triggerActionOnDevice(orgID, deviceID string, act messages.S
 
 	// Publish the request
 	t := fmt.Sprintf("devices/sub/%s", deviceID)
-	err = srv.MQTT.Publish(t, string(data))
+	pubMessage := mqtt.PublishMessage{Topic: t, Payload: string(data)}
+	log.Infof("Triggering action on device, sending pubMessage: %s", string(data))
+	srv.publishChan <- pubMessage
 	if err != nil {
 		log.Printf("Error in publish: %v", err)
 		return fmt.Errorf("error in publish: %v", err)

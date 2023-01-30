@@ -1,1 +1,8 @@
 ../config/config.yaml
+pkg/messages/*
+bin/test/
+iot-management/service/manage/mock_Manage.go
+iot-devicetwin/service/controller/mock_Controller.go
+iot-devicetwin/service/controller/mock_UnscopedController.go
+iot-devicetwin/service/devicetwin/mock_DeviceTwin.go
+iot-devicetwin/service/devicetwin/mock_UnscopedDeviceTwin.go
