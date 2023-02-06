@@ -379,20 +379,31 @@ func TestService_actionMessageHandler(t *testing.T) {
 	type fields struct {
 	}
 	type args struct {
-		expectedTopic               string
-		expectedPublishSnapsMessage messages.PublishSnapsV2
-		expectedDeviceID            string
+		expectedTopic                 string
+		expectedPublishSnapsV2Message messages.PublishSnapsV2
+		expectedPublishSnapsMessage messages.PublishSnaps
+		expectedDeviceID              string
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
+		needsDatabase bool
+		versionedPath bool
 	}{
 		{
 			name: "valid-versioned",
 			args: args{
-				expectedTopic: "device/health/some-device-id", expectedPublishSnapsMessage: messages.PublishSnapsV2{Version: "2", Action: "list", Success: true, Id: "1029384756"}, expectedDeviceID: "some-device-id",
+				expectedTopic: "device/health/some-device-id", expectedPublishSnapsV2Message: messages.PublishSnapsV2{Version: "2", Action: "list", Success: true, Id: "1029384756"}, expectedDeviceID: "some-device-id",
+			},
+			needsDatabase: true,
+			versionedPath: true,
+		},
+		{
+			name: "valid-unversioned",
+			args: args{
+				expectedTopic: "device/health/some-device-id", expectedPublishSnapsMessage: messages.PublishSnaps{Action: "list", Success: true, Id: "1029384756"}, expectedDeviceID: "some-device-id",
 			},
 		},
 	}
@@ -402,50 +413,82 @@ func TestService_actionMessageHandler(t *testing.T) {
 
 			mockMessage := &mocks.Message{}
 			mockMessage.On("Topic").Return(tt.args.expectedTopic)
-			bytes, err := json.Marshal(&tt.args.expectedPublishSnapsMessage)
-			if err != nil {
-				assert.Error(t, err)
-			}
-			mockMessage.On("Payload").Return(bytes)
 
-			embeddedPostgres, db, err := createDatabase()
-			if err != nil {
-				t.Errorf("Error creating database: %v", err)
-				t.FailNow()
-			}
-
-			defer func() {
-				err2 := embeddedPostgres.Stop()
-				if err2 != nil {
-					t.Errorf("error stopping embedded database: %v", err2)
+			if tt.versionedPath {
+				bytes, err := json.Marshal(&tt.args.expectedPublishSnapsV2Message)
+				if err != nil {
+					assert.Error(t, err)
 				}
-			}()
+				mockMessage.On("Payload").Return(bytes)
+			} else {
+				bytes, err := json.Marshal(&tt.args.expectedPublishSnapsMessage)
+				if err != nil {
+					assert.Error(t, err)
+				}
+				mockMessage.On("Payload").Return(bytes)
+			}
+
+
+
+			var embeddedPostgres *embeddedpostgres.EmbeddedPostgres
+			var db *gorm.DB
+			var err error
+			if tt.needsDatabase {
+				embeddedPostgres, db, err = createDatabase()
+				if err != nil {
+					t.Errorf("Error creating database: %v", err)
+					t.FailNow()
+				}
+
+				defer func() {
+					err2 := embeddedPostgres.Stop()
+					if err2 != nil {
+						t.Errorf("error stopping embedded database: %v", err2)
+					}
+				}()
+			}
 
 			dt := &devicetwin.MockDeviceTwin{}
 
-			publishSnaps := messages.PublishSnaps{
-				Action:  tt.args.expectedPublishSnapsMessage.Action,
-				Id:      tt.args.expectedPublishSnapsMessage.Id,
-				Message: tt.args.expectedPublishSnapsMessage.Message,
-				Success: tt.args.expectedPublishSnapsMessage.Success,
-			}
+			if tt.versionedPath {
+				publishSnaps := messages.PublishSnaps{
+					Action:  tt.args.expectedPublishSnapsV2Message.Action,
+					Id:      tt.args.expectedPublishSnapsV2Message.Id,
+					Message: tt.args.expectedPublishSnapsV2Message.Message,
+					Success: tt.args.expectedPublishSnapsV2Message.Success,
+				}
 
-			if tt.args.expectedPublishSnapsMessage.Result != nil {
-				publishSnaps.Result = tt.args.expectedPublishSnapsMessage.Result.Snaps
-			}
+				if tt.args.expectedPublishSnapsV2Message.Result != nil {
+					publishSnaps.Result = tt.args.expectedPublishSnapsV2Message.Result.Snaps
+				}
 
-			payload, err := json.Marshal(&publishSnaps)
-			if err != nil {
-				t.Errorf("error marshling message: %v", err)
-				t.FailNow()
-			}
-			dt.On("ActionResponse", tt.args.expectedDeviceID, tt.args.expectedPublishSnapsMessage.Id, tt.args.expectedPublishSnapsMessage.Action, payload).Return(nil)
+				payload, err := json.Marshal(&publishSnaps)
+				if err != nil {
+					t.Errorf("error marshling message: %v", err)
+					t.FailNow()
+				}
+				dt.On("ActionResponse", tt.args.expectedDeviceID, tt.args.expectedPublishSnapsV2Message.Id, tt.args.expectedPublishSnapsV2Message.Action, payload).Return(nil)
 
-			srv.db = db
-			srv.twin = dt
+				srv.db = db
+				srv.twin = dt
 
-			if err3 := srv.actionMessageHandler(mockMessage); (err3 != nil) != tt.wantErr {
-				t.Errorf("actionMessageHandler() error = %v, wantErr %v", err3, tt.wantErr)
+				if err3 := srv.actionMessageHandler(mockMessage); (err3 != nil) != tt.wantErr {
+					t.Errorf("actionMessageHandler() error = %v, wantErr %v", err3, tt.wantErr)
+				}
+			} else {
+				payload, err := json.Marshal(&tt.args.expectedPublishSnapsMessage)
+				if err != nil {
+					t.Errorf("error marshling message: %v", err)
+					t.FailNow()
+				}
+
+				dt.On("ActionResponse", tt.args.expectedDeviceID, tt.args.expectedPublishSnapsMessage.Id, tt.args.expectedPublishSnapsMessage.Action, payload).Return(nil)
+
+				srv.twin = dt
+
+				if err3 := srv.actionMessageHandler(mockMessage); (err3 != nil) != tt.wantErr {
+					t.Errorf("actionMessageHandler() error = %v, wantErr %v", err3, tt.wantErr)
+				}
 			}
 		})
 	}
