@@ -256,9 +256,9 @@ func (srv *Service) actionMessageHandler(msg MQTT.Message) error {
 
 	logger.Infof("Received action message type %s, sending to iot-devicetwin", versionedMessage.Action)
 
-	// If it's unversioned it wll be 0, if it's a version we know, handle it, otherwise error
+	// If it's unversioned it will be the string zero value (empty), if it's a version we know, handle it, otherwise error
 	switch versionedMessage.Version {
-	case "0":
+	case "":
 		err := srv.twin.ActionResponse(clientID, versionedMessage.Id, versionedMessage.Action, msg.Payload())
 		if err != nil {
 			return fmt.Errorf("error in ActionResponse: %w", err)
