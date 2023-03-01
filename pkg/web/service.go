@@ -64,8 +64,7 @@ func New(srv manage.Manage, db *gorm.DB) *suture.Supervisor {
 	}
 
 	engine := gin.Default()
-
-	engine.Use(gin.Logger())
+	gin.SetMode(gin.ReleaseMode)
 
 	legacyWeb := web.NewService(srv, engine)
 	hs := &HandlerService{srv, legacyWeb, engine, db}

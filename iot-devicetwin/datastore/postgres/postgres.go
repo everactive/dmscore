@@ -29,7 +29,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/gorm/logger"
-	"os"
 	"time"
 
 	"github.com/everactive/dmscore/iot-devicetwin/datastore"
@@ -50,6 +49,7 @@ type DataStore struct {
 }
 
 var pgStore *DataStore
+var postgresLogger = log.StandardLogger()
 
 // OpenDataStore returns an open database connection
 func OpenDataStore(driver, dataSource string) *DataStore {
@@ -107,11 +107,8 @@ func (g *GormLogrusAdapter) Trace(ctx context.Context, begin time.Time, fc func(
 // openDatabase return an open database connection for a postgreSQL database
 func openDatabase(driver, dataSource string) *DataStore {
 	// Open the database connection
-	newLogger := log.New()
-	newLogger.SetOutput(os.Stdout)
-	newLogger.SetLevel(log.TraceLevel)
 	db, err := gorm.Open(postgres.Open(dataSource), &gorm.Config{
-		Logger: GormLogrusAdapter{}.New(newLogger),
+		Logger: GormLogrusAdapter{}.New(postgresLogger),
 	})
 
 	if err != nil {

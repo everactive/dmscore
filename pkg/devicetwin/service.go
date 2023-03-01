@@ -70,7 +70,7 @@ func getMQTTConnection(url, port string, connect *devicetwinconfig.MQTTConnect, 
 	return mqtt.GetConnection(url, port, connect, func(c MQTT.Client) {
 		logger.Println("Connecting to MQTT, subscribing to actions")
 		if err := service.SubscribeToActions(); err != nil {
-			logger.Fatalf("error establishing MQTT subscriptions: %s", err)
+			logger.Fatalf("error establishing MQTT subscriptions: %#v", err)
 		}
 	})
 }

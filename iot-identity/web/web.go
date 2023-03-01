@@ -47,7 +47,7 @@ type IdentityService struct {
 // NewIdentityService returns a new web controller
 func NewIdentityService(id service.Identity, l *log.Logger) *IdentityService {
 	enrollRouter := gin.New()
-
+	gin.SetMode(gin.ReleaseMode)
 	logFormat := os.Getenv("LOG_FORMAT")
 	if strings.ToUpper(logFormat) == "JSON" {
 		log.Infof("Setting up JSON log format for logger middleware")
