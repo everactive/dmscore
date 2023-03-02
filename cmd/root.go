@@ -14,12 +14,14 @@ import (
 	"github.com/everactive/dmscore/iot-management/service/manage"
 	"github.com/everactive/dmscore/iot-management/twinapi"
 	datastores2 "github.com/everactive/dmscore/pkg/datastores"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	// this is needed for migrate
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -48,12 +50,40 @@ var Root = cobra.Command{
 	Long:  "dmscore",
 }
 
+func setupLogging() {
+	log.SetLevel(log.TraceLevel)
+	log.Infof("Server starting with log level = %s", log.TraceLevel.String())
+
+	envLogLevel := os.Getenv("LOG_LEVEL")
+	log.Infof("env LOG_LEVEL: %s", envLogLevel)
+
+	logLevelToUse := envLogLevel
+
+	if len(logLevelToUse) > 0 {
+		l, err := log.ParseLevel(logLevelToUse)
+		if err != nil {
+			log.Tracef("Could not parse logging level (%s) to a valid log level. Using trace logging.", logLevelToUse)
+		} else {
+			log.SetLevel(l)
+		}
+	}
+
+	open, err := os.Create(fmt.Sprintf("dmscore-%s.log", time.Now().String()))
+	if err != nil {
+		log.Warnf("Can't log to file, using normal console output: %v", err)
+	} else {
+		log.SetOutput(open)
+	}
+
+	log.Infof("Using logging level %s for watchdog, change logger level is separate", log.GetLevel())
+}
+
 var runCommand = cobra.Command{
 	Use:   "run",
 	Short: "run",
 	Long:  "run",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.SetLevel(log.TraceLevel)
+		setupLogging()
 
 		var configFilePath string
 		if filePath, ok := os.LookupEnv("CONFIG_FILE_PATH"); ok {
@@ -63,6 +93,8 @@ var runCommand = cobra.Command{
 		config.LoadConfig(configFilePath)
 
 		loadStoreIDs()
+
+		gin.SetMode(gin.ReleaseMode)
 
 		dataStores, err := datastores2.New()
 		if err != nil {

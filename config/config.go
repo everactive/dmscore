@@ -33,7 +33,7 @@ var defaultValues = map[string]interface{}{
 	keys.GetIdentityKey(keys.MigrationsSourceURL):   "/migrations/identity",
 	keys.GetIdentityKey(keys.CertificatesPath):      "/srv/identity-certs",
 	keys.DefaultServiceHeartbeat:                    "60s",
-	keys.RequiredSnapsInstallServiceCheckInterval:   "30s",
+	keys.RequiredSnapsInstallServiceCheckInterval:   "5m",
 	keys.RefreshSnapListOnAnyChange:                 false,
 	keys.RequiredSnapsCheckInterval:                 "100ms",
 }

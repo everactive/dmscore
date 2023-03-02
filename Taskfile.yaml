@@ -44,8 +44,8 @@ tasks:
     desc: This will generate the Go structs from the schema definitions
     cmds:
       - mkdir -p pkg/messages
-      - schema-generate -o pkg/messages/messages.go -p messages ./schemas/schemas.json
-      - schema-generate -o pkg/messages/rest.go -p messages ./schemas/rest_schemas.json
+      - schema-generate -o pkg/messages/messages.go -p messages ./dms-schemas/schemas.json
+      - schema-generate -o pkg/messages/rest.go -p messages ./dms-schemas/rest_schemas.json
   create-migration:
     desc: Creates a dmscore database migration (this is for the primary "management" database)
     cmds:

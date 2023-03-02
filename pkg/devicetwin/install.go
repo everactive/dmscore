@@ -277,6 +277,7 @@ func (c *Checker) checkNextDevice() error {
 	if len(requiredForThisDevice) == 0 {
 		log.Tracef("No required snaps for device id=%s, serial=%s", nextDevice.DeviceID, nextDevice.SerialNumber)
 		c.devicesIDs = c.devicesIDs[1:]
+		delete(c.deviceList, nextDevice.DeviceID)
 		return nil
 	}
 
